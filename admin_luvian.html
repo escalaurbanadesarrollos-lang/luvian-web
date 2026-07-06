@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUVIAN — Panel Administrador</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --azul: #0d1b3e;
+  --azul-medio: #1a2f5a;
+  --azul-claro: #243d72;
+  --oro: #c9a84c;
+  --oro-claro: #e6c97a;
+  --crema: #FEFDF8;
+  --blanco: #ffffff;
+  --gris: #f4f3ef;
+  --gris-2: #e8e7e2;
+  --texto: #1a1a2e;
+  --verde: #2ecc71;
+  --rojo: #e74c3c;
+  --naranja: #f39c12;
+  --sidebar-w: 260px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Jost',sans-serif; background:#0a1328; color:var(--blanco); display:flex; min-height:100vh; overflow-x:hidden; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--azul); }
+::-webkit-scrollbar-thumb { background:var(--oro); border-radius:3px; }
+
+/* ── LOGIN ── */
+#loginScreen {
+  position:fixed; inset:0; z-index:9999;
+  background:linear-gradient(135deg, #060f24 0%, #0d1b3e 50%, #1a2f5a 100%);
+  display:flex; align-items:center; justify-content:center;
+}
+.login-box {
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(201,168,76,0.25);
+  border-radius:6px; padding:48px 44px; width:100%; max-width:420px;
+  backdrop-filter:blur(20px);
+  animation: fadeIn 0.5s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.login-logo { text-align:center; margin-bottom:32px; }
+.login-logo-l {
+  width:64px; height:64px; background:linear-gradient(135deg,var(--oro),var(--oro-claro));
+  border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--azul);
+  margin-bottom:14px;
+}
+.login-brand { font-family:'Cormorant Garamond',serif; font-size:1.8rem; letter-spacing:4px; font-weight:600; }
+.login-sub { font-size:10px; letter-spacing:2.5px; color:var(--oro); text-transform:uppercase; margin-top:4px; }
+.login-title { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:400; color:rgba(255,255,255,0.7); margin-bottom:28px; text-align:center; }
+.l-field { margin-bottom:18px; }
+.l-field label { display:block; font-size:10px; letter-spacing:2px; color:var(--oro); text-transform:uppercase; margin-bottom:6px; font-weight:500; }
+.l-field input {
+  width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(201,168,76,0.2);
+  border-radius:2px; padding:13px 16px; color:var(--blanco);
+  font-family:'Jost',sans-serif; font-size:14px; outline:none; transition:border 0.3s;
+}
+.l-field input:focus { border-color:var(--oro); }
+.l-field input::placeholder { color:rgba(255,255,255,0.3); }
+.l-tabs { display:flex; gap:4px; margin-bottom:24px; background:rgba(255,255,255,0.04); border-radius:4px; padding:4px; }
+.l-tab {
+  flex:1; padding:9px; border-radius:2px; border:none; cursor:pointer;
+  font-family:'Jost',sans-serif; font-size:12px; letter-spacing:1px; text-transform:uppercase;
+  font-weight:500; transition:all 0.3s; background:transparent; color:rgba(255,255,255,0.5);
+}
+.l-tab.active { background:var(--oro); color:var(--azul); }
+.btn-login {
+  width:100%; background:linear-gradient(135deg,var(--oro),var(--oro-claro));
+  border:none; border-radius:2px; padding:14px;
+  color:var(--azul); font-family:'Jost',sans-serif; font-size:13px;
+  font-weight:600; letter-spacing:2px; cursor:pointer; text-transform:uppercase;
+  transition:all 0.3s; margin-top:4px;
+}
+.btn-login:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(201,168,76,0.3); }
+.login-hint { text-align:center; margin-top:16px; font-size:11px; color:rgba(255,255,255,0.25); }
+.login-error { color:#e74c3c; font-size:12px; text-align:center; margin-top:8px; display:none; }
+
+/* ── SIDEBAR ── */
+#app { display:none; width:100%; }
+.sidebar {
+  width:var(--sidebar-w); min-height:100vh; position:fixed; left:0; top:0;
+  background:linear-gradient(180deg, #08111f 0%, #0d1b3e 100%);
+  border-right:1px solid rgba(201,168,76,0.12);
+  display:flex; flex-direction:column; z-index:100;
+  transition:transform 0.3s;
+}
+.sb-logo {
+  padding:28px 24px 24px; border-bottom:1px solid rgba(201,168,76,0.1);
+  display:flex; align-items:center; gap:12px;
+}
+.sb-logo-icon {
+  width:40px; height:40px; background:linear-gradient(135deg,var(--oro),var(--oro-claro));
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:var(--azul);
+  flex-shrink:0;
+}
+.sb-logo-text { font-family:'Cormorant Garamond',serif; font-size:1.2rem; letter-spacing:2px; font-weight:600; }
+.sb-logo-sub { font-size:8px; letter-spacing:2px; color:var(--oro); text-transform:uppercase; }
+
+.sb-role-badge {
+  margin:16px 20px; padding:8px 14px;
+  background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); border-radius:2px;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--oro);
+  text-align:center; font-weight:500;
+}
+
+.sb-section { padding:8px 16px 4px; font-size:9px; letter-spacing:2.5px; color:rgba(255,255,255,0.25); text-transform:uppercase; font-weight:500; margin-top:8px; }
+.sb-nav { padding:0 12px; flex:1; overflow-y:auto; }
+.sb-item {
+  display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:3px;
+  cursor:pointer; font-size:13px; color:rgba(255,255,255,0.6); font-weight:500;
+  transition:all 0.2s; margin-bottom:2px; border:1px solid transparent;
+  text-decoration:none;
+}
+.sb-item:hover { color:var(--blanco); background:rgba(255,255,255,0.05); }
+.sb-item.active { color:var(--oro); background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.15); }
+.sb-item .icon { font-size:16px; width:20px; text-align:center; }
+.sb-badge {
+  margin-left:auto; background:var(--rojo); color:white; border-radius:50px;
+  padding:1px 7px; font-size:10px; font-weight:600;
+}
+.sb-badge.oro { background:var(--oro); color:var(--azul); }
+
+.sb-footer {
+  padding:16px 20px; border-top:1px solid rgba(201,168,76,0.1);
+  font-size:12px; color:rgba(255,255,255,0.4);
+}
+.sb-user { display:flex; align-items:center; gap:10px; }
+.sb-avatar {
+  width:32px; height:32px; border-radius:50%;
+  background:linear-gradient(135deg,var(--azul-claro),var(--azul-medio));
+  border:1px solid var(--oro); display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:600; color:var(--oro);
+}
+.sb-user-name { font-size:13px; color:rgba(255,255,255,0.7); font-weight:500; }
+.sb-user-role { font-size:10px; color:rgba(255,255,255,0.3); letter-spacing:1px; }
+.btn-logout { margin-left:auto; background:none; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-size:16px; transition:color 0.3s; }
+.btn-logout:hover { color:var(--rojo); }
+
+/* ── MAIN ── */
+.main { margin-left:var(--sidebar-w); flex:1; min-height:100vh; background:#0a1328; }
+.topbar {
+  background:rgba(13,27,62,0.9); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(201,168,76,0.1);
+  padding:16px 32px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:50;
+}
+.topbar-title { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:500; }
+.topbar-actions { display:flex; gap:10px; }
+.btn-primary {
+  background:linear-gradient(135deg,var(--oro),var(--oro-claro)); border:none; border-radius:2px;
+  padding:9px 20px; color:var(--azul); font-family:'Jost',sans-serif; font-size:12px;
+  font-weight:600; letter-spacing:1px; cursor:pointer; text-transform:uppercase; transition:all 0.3s;
+}
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(201,168,76,0.3); }
+.btn-ghost {
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:2px;
+  padding:9px 18px; color:rgba(255,255,255,0.7); font-family:'Jost',sans-serif; font-size:12px;
+  font-weight:500; cursor:pointer; letter-spacing:1px; text-transform:uppercase; transition:all 0.3s;
+}
+.btn-ghost:hover { border-color:var(--oro); color:var(--oro); }
+
+/* ── PAGES ── */
+.page { display:none; padding:32px; animation:fadeIn 0.3s ease; }
+.page.active { display:block; }
+
+/* ── STAT CARDS ── */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:28px; }
+.stat-card {
+  background:linear-gradient(135deg, rgba(26,47,90,0.8), rgba(13,27,62,0.9));
+  border:1px solid rgba(201,168,76,0.15); border-radius:4px; padding:22px 24px;
+  transition:all 0.3s; cursor:default;
+}
+.stat-card:hover { border-color:rgba(201,168,76,0.35); transform:translateY(-2px); }
+.stat-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.stat-card-icon { font-size:22px; }
+.stat-card-trend { font-size:11px; color:var(--verde); font-weight:500; }
+.stat-card-num { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:700; color:var(--oro); line-height:1; margin-bottom:4px; }
+.stat-card-label { font-size:11px; color:rgba(255,255,255,0.5); letter-spacing:1.5px; text-transform:uppercase; }
+
+/* ── TABLES ── */
+.card {
+  background:rgba(26,47,90,0.5); border:1px solid rgba(201,168,76,0.12);
+  border-radius:4px; overflow:hidden; margin-bottom:24px;
+}
+.card-header {
+  padding:18px 24px; border-bottom:1px solid rgba(201,168,76,0.1);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.card-title { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:500; }
+.card-body { padding:0; }
+
+table { width:100%; border-collapse:collapse; }
+th {
+  padding:12px 18px; text-align:left; font-size:10px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--oro); background:rgba(13,27,62,0.5);
+  font-weight:500; border-bottom:1px solid rgba(201,168,76,0.1);
+}
+td {
+  padding:14px 18px; font-size:13px; color:rgba(255,255,255,0.75);
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(201,168,76,0.03); }
+
+.tag {
+  display:inline-block; padding:3px 10px; border-radius:50px;
+  font-size:10px; letter-spacing:1px; font-weight:600; text-transform:uppercase;
+}
+.tag-lote { background:rgba(13,27,62,0.8); color:var(--oro); border:1px solid rgba(201,168,76,0.3); }
+.tag-vivienda { background:rgba(201,168,76,0.15); color:var(--oro-claro); border:1px solid rgba(201,168,76,0.25); }
+.tag-nave { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); border:1px solid rgba(255,255,255,0.15); }
+.tag-nuevo { background:rgba(46,204,113,0.15); color:var(--verde); border:1px solid rgba(46,204,113,0.25); }
+.tag-pendiente { background:rgba(243,156,18,0.15); color:var(--naranja); border:1px solid rgba(243,156,18,0.25); }
+.tag-leido { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.1); }
+.tag-confirmada { background:rgba(46,204,113,0.15); color:var(--verde); border:1px solid rgba(46,204,113,0.25); }
+
+.action-btns { display:flex; gap:6px; }
+.btn-sm {
+  padding:5px 12px; border-radius:2px; border:none; cursor:pointer;
+  font-family:'Jost',sans-serif; font-size:11px; font-weight:500; letter-spacing:0.5px;
+  transition:all 0.2s;
+}
+.btn-edit { background:rgba(201,168,76,0.15); color:var(--oro); }
+.btn-edit:hover { background:rgba(201,168,76,0.25); }
+.btn-del { background:rgba(231,76,60,0.15); color:var(--rojo); }
+.btn-del:hover { background:rgba(231,76,60,0.25); }
+.btn-view { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); }
+.btn-view:hover { background:rgba(255,255,255,0.14); color:white; }
+.btn-send { background:rgba(46,204,113,0.15); color:var(--verde); }
+.btn-send:hover { background:rgba(46,204,113,0.25); }
+
+/* ── FORM ── */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.form-grid.cols3 { grid-template-columns:1fr 1fr 1fr; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group.full { grid-column:1/-1; }
+.form-group label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--oro); font-weight:500; }
+.form-group input, .form-group select, .form-group textarea {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(201,168,76,0.18);
+  border-radius:2px; padding:11px 14px; color:var(--blanco);
+  font-family:'Jost',sans-serif; font-size:13px; outline:none; transition:border 0.3s;
+  resize:none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--oro); }
+.form-group input::placeholder, .form-group textarea::placeholder { color:rgba(255,255,255,0.25); }
+.form-group select option { background:var(--azul); }
+
+.img-upload-area {
+  border:2px dashed rgba(201,168,76,0.25); border-radius:4px; padding:32px;
+  text-align:center; cursor:pointer; transition:all 0.3s; color:rgba(255,255,255,0.4);
+}
+.img-upload-area:hover { border-color:var(--oro); color:var(--oro); }
+.img-preview { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.img-thumb {
+  width:90px; height:70px; object-fit:cover; border-radius:2px;
+  border:1px solid rgba(201,168,76,0.2);
+}
+
+/* ── MESSAGES ── */
+.msg-list { display:flex; flex-direction:column; }
+.msg-item {
+  padding:18px 24px; border-bottom:1px solid rgba(255,255,255,0.04);
+  cursor:pointer; transition:background 0.2s; display:flex; gap:16px; align-items:flex-start;
+}
+.msg-item:hover { background:rgba(255,255,255,0.03); }
+.msg-item.unread { border-left:3px solid var(--oro); }
+.msg-avatar {
+  width:42px; height:42px; border-radius:50%;
+  background:linear-gradient(135deg,var(--azul-claro),var(--azul-medio));
+  border:1px solid rgba(201,168,76,0.3); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:var(--oro);
+}
+.msg-content { flex:1; }
+.msg-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+.msg-name { font-size:14px; font-weight:600; color:var(--blanco); }
+.msg-time { font-size:11px; color:rgba(255,255,255,0.3); }
+.msg-preview { font-size:13px; color:rgba(255,255,255,0.55); line-height:1.5; margin-bottom:6px; }
+.msg-tags { display:flex; gap:6px; flex-wrap:wrap; }
+
+/* ── CITAS ── */
+.calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:20px; }
+.cal-header { text-align:center; font-size:10px; letter-spacing:1.5px; color:var(--oro); text-transform:uppercase; padding:8px 4px; font-weight:600; }
+.cal-day {
+  min-height:64px; background:rgba(255,255,255,0.03); border-radius:3px;
+  padding:8px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; transition:all 0.2s;
+}
+.cal-day:hover { border-color:rgba(201,168,76,0.25); background:rgba(201,168,76,0.04); }
+.cal-day.today { border-color:var(--oro); background:rgba(201,168,76,0.07); }
+.cal-day.has-event { border-color:rgba(46,204,113,0.3); }
+.cal-day-num { font-size:13px; font-weight:500; color:rgba(255,255,255,0.7); margin-bottom:4px; }
+.cal-day.today .cal-day-num { color:var(--oro); font-weight:700; }
+.cal-event {
+  background:rgba(46,204,113,0.2); border-radius:2px; padding:2px 5px;
+  font-size:9px; color:var(--verde); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.cal-event.oro { background:rgba(201,168,76,0.2); color:var(--oro); }
+
+/* ── MODAL ── */
+.overlay {
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(8,17,31,0.85); backdrop-filter:blur(16px);
+  display:none; align-items:center; justify-content:center; padding:24px;
+}
+.overlay.open { display:flex; }
+.modal-box {
+  background:var(--azul-medio); border:1px solid rgba(201,168,76,0.25);
+  border-radius:6px; width:100%; max-width:680px; max-height:90vh; overflow-y:auto;
+  animation:fadeIn 0.25s ease;
+}
+.modal-hd {
+  padding:22px 26px; border-bottom:1px solid rgba(201,168,76,0.1);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.modal-hd h3 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:500; }
+.modal-close { background:none; border:none; color:rgba(255,255,255,0.4); font-size:22px; cursor:pointer; transition:color 0.3s; }
+.modal-close:hover { color:var(--rojo); }
+.modal-bd { padding:24px 26px 28px; }
+
+/* ── PRESUPUESTO ── */
+.presup-item {
+  display:grid; grid-template-columns:1fr auto auto;
+  gap:12px; align-items:center; padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.presup-total {
+  background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.2);
+  border-radius:2px; padding:14px 18px;
+  display:flex; justify-content:space-between; align-items:center; margin-top:16px;
+}
+.presup-total-label { font-size:12px; letter-spacing:1.5px; color:var(--oro); text-transform:uppercase; }
+.presup-total-val { font-family:'Cormorant Garamond',serif; font-size:1.8rem; color:var(--oro); font-weight:700; }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:28px; right:28px; z-index:9000;
+  background:var(--azul-medio); border:1px solid rgba(201,168,76,0.3); border-radius:4px;
+  padding:14px 20px; font-size:13px; color:var(--blanco);
+  box-shadow:0 8px 32px rgba(0,0,0,0.4); transform:translateY(80px); opacity:0;
+  transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275); pointer-events:none;
+  max-width:320px; display:flex; align-items:center; gap:10px;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.success { border-color:rgba(46,204,113,0.4); }
+.toast.error { border-color:rgba(231,76,60,0.4); }
+
+/* ── CHARTS placeholder ── */
+.mini-chart { height:60px; display:flex; align-items:flex-end; gap:4px; padding:0 4px; }
+.bar { flex:1; border-radius:2px 2px 0 0; background:rgba(201,168,76,0.35); transition:height 0.5s; min-height:4px; }
+.bar.active { background:var(--oro); }
+
+/* ── TOGGLE ── */
+.toggle-wrap { display:flex; align-items:center; gap:10px; }
+.toggle { position:relative; width:42px; height:22px; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-slider {
+  position:absolute; inset:0; border-radius:50px; cursor:pointer;
+  background:rgba(255,255,255,0.1); transition:0.3s;
+}
+.toggle-slider:before {
+  content:''; position:absolute; width:16px; height:16px;
+  bottom:3px; left:3px; border-radius:50%;
+  background:rgba(255,255,255,0.5); transition:0.3s;
+}
+.toggle input:checked + .toggle-slider { background:rgba(201,168,76,0.4); }
+.toggle input:checked + .toggle-slider:before { transform:translateX(20px); background:var(--oro); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+  .form-grid, .form-grid.cols3 { grid-template-columns:1fr; }
+  .page { padding:20px 16px; }
+}
+
+/* ── USER PANEL adjustments ── */
+.user-prop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; }
+.user-prop-card {
+  background:rgba(26,47,90,0.5); border:1px solid rgba(201,168,76,0.12);
+  border-radius:4px; overflow:hidden; transition:all 0.3s; cursor:pointer;
+}
+.user-prop-card:hover { border-color:rgba(201,168,76,0.3); transform:translateY(-3px); }
+.user-prop-img { width:100%; height:170px; object-fit:cover; display:block; }
+.user-prop-body { padding:16px; }
+.user-prop-price { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--oro); font-weight:700; margin-bottom:4px; }
+.user-prop-title { font-size:13px; font-weight:500; margin-bottom:4px; }
+.user-prop-loc { font-size:11px; color:rgba(255,255,255,0.4); }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-l">L</div>
+      <div class="login-brand">LUVIAN</div>
+      <div class="login-sub">Desarrollos Inmobiliarios</div>
+    </div>
+    <div class="l-tabs">
+      <button class="l-tab active" onclick="setLoginRole('admin',this)">Administrador</button>
+      <button class="l-tab" onclick="setLoginRole('user',this)">Usuario</button>
+    </div>
+    <div class="l-field">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="admin / usuario">
+    </div>
+    <div class="l-field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Ingresar al Panel →</button>
+    <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
+    <div class="login-hint">Admin: admin / admin123 &nbsp;·&nbsp; Usuario: user / user123</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">L</div>
+      <div>
+        <div class="sb-logo-text">LUVIAN</div>
+        <div class="sb-logo-sub">Panel de gestión</div>
+      </div>
+    </div>
+    <div class="sb-role-badge" id="roleLabel">ADMINISTRADOR</div>
+    <nav class="sb-nav" id="sbNav">
+      <!-- dinámico -->
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sbAvatar">A</div>
+        <div>
+          <div class="sb-user-name" id="sbName">Admin</div>
+          <div class="sb-user-role" id="sbRole">Administrador</div>
+        </div>
+        <button class="btn-logout" title="Salir" onclick="logout()">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none;background:none;border:none;color:var(--oro);font-size:20px;cursor:pointer;" id="menuToggle">☰</button>
+        <div class="topbar-title" id="pageTitle">Dashboard</div>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </div>
+    <div id="pages"></div>
+  </main>
+</div>
+
+<!-- ── OVERLAYS ── -->
+<div class="overlay" id="mainOverlay" onclick="closeOverlay(event)">
+  <div class="modal-box" id="mainModal">
+    <div class="modal-hd">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-bd" id="modalContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────
+let currentRole = 'admin';
+let currentPage = '';
+
+const ADMIN_CREDS = { user:'admin', pass:'admin123' };
+const USER_CREDS  = { user:'user',  pass:'user123' };
+function getAdminCreds() { return adminCreds && adminCreds.user ? adminCreds : ADMIN_CREDS; }
+
+// Persistent store
+function store(key, val) { localStorage.setItem('luvian_'+key, JSON.stringify(val)); }
+function load(key, def)  { try { return JSON.parse(localStorage.getItem('luvian_'+key)) ?? def; } catch{ return def; } }
+
+let propiedades = load('props', [
+  { id:1, tipo:'lote', titulo:'Lote Residencial — Barrio Don Bosco', precio:'USD 18.500', zona:'Resistencia Norte', sup:'450 m²', desc:'Lote residencial en barrio consolidado con todas las habilitaciones.', estado:'activo', oferta:true, imgs:['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=70'], features:'Arbolado, Agua, Luz', fecha:'2025-04-01' },
+  { id:2, tipo:'vivienda', titulo:'Casa Moderna — Barranqueras', precio:'USD 65.000', zona:'Barranqueras', sup:'120 m²', desc:'Casa moderna de 3 ambientes con jardín y garage.', estado:'activo', oferta:true, imgs:['https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600&q=70'], features:'3 amb, 2 baños, Garage', fecha:'2025-03-15' },
+  { id:3, tipo:'nave', titulo:'Nave Logística — Parque Industrial', precio:'USD 185.000', zona:'Parque Industrial', sup:'1200 m²', desc:'Nave de planta libre con portón camiones y 3 fases.', estado:'activo', oferta:false, imgs:['https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=600&q=70'], features:'1200m², 3 fases, Camiones', fecha:'2025-02-20' },
+  { id:4, tipo:'lote', titulo:'Lotes en Barrio Las Palmeras', precio:'USD 25.000', zona:'Resistencia Sudoeste', sup:'360 m²', desc:'Barrio privado con seguridad 24hs y amenities.', estado:'pausado', oferta:false, imgs:['https://images.unsplash.com/photo-1531971589569-0d9370cbe1e5?w=600&q=70'], features:'Barrio cerrado, Piscina, Parques', fecha:'2025-01-10' },
+]);
+
+let mensajes = load('msgs', [
+  { id:1, nombre:'Martín Rodríguez', email:'martin@email.com', tel:'+54362411111', interes:'Lotes', msg:'Buenos días, quisiera información sobre los lotes de Las Palmeras. Tengo posibilidades de compra en efectivo.', fecha:'2025-05-28', leido:false },
+  { id:2, nombre:'Ana García', email:'ana@email.com', tel:'+54362422222', interes:'Viviendas', msg:'Hola, busco una casa de 3 ambientes en Resistencia o Barranqueras, presupuesto hasta 80k USD.', fecha:'2025-05-27', leido:false },
+  { id:3, nombre:'Diego Mena', email:'diego@email.com', tel:'+54362433333', interes:'Naves Industriales', msg:'Necesito una nave de al menos 800m² para logística. Por favor contactarme.', fecha:'2025-05-25', leido:true },
+  { id:4, nombre:'Sofía Torres', email:'sofia@email.com', tel:'+54362444444', interes:'Lotes', msg:'Me interesa el lote en Barrio Don Bosco. ¿Tienen financiación disponible?', fecha:'2025-05-24', leido:true },
+]);
+
+let citas = load('citas', [
+  { id:1, cliente:'Martín Rodríguez', tel:'+54362411111', tipo:'Visita a propiedad', propiedad:'Lote Don Bosco', fecha:'2025-06-05', hora:'10:00', estado:'confirmada', notas:'Cliente interesado en compra al contado' },
+  { id:2, cliente:'Ana García', tel:'+54362422222', tipo:'Consulta oficina', propiedad:'Viviendas generales', fecha:'2025-06-07', hora:'15:30', estado:'pendiente', notas:'Quiere ver opciones de financiación' },
+  { id:3, cliente:'Facundo López', tel:'+54362455555', tipo:'Visita a propiedad', propiedad:'Nave Industrial', fecha:'2025-06-10', hora:'09:00', estado:'confirmada', notas:'Trae socio para decisión final' },
+]);
+
+let presupuestos = load('presups', [
+  { id:1, cliente:'Diego Mena', email:'diego@email.com', concepto:'Nave Logística 1200m² + escrituración + honorarios', total:'USD 192.500', fecha:'2025-05-26', estado:'enviado' },
+]);
+
+let favs = load('favs', [1,2]);
+
+// ── NUEVOS DATOS CENTRALIZADOS (compartidos con el sitio público) ──
+let siteConfig = load('config', {
+  empresa:'LUVIAN Desarrollos Inmobiliarios',
+  eslogan:'Tu próximo terreno en el Chaco',
+  telefono:'362 516-5079',
+  whatsappNumber:'5493625165079',
+  whatsappMsg:'Hola, vi una propiedad en Luvian Desarrollos y quiero más información.',
+  email:'luviandesarrollosinmobiliarios@gmail.com',
+  direccion:'Juan B. Justo 144, Piso 5D · Con cita previa'
+});
+let social = load('social', {
+  instagram:'https://instagram.com/luvian_desarrollos',
+  facebook:'https://facebook.com/luviandesarrollos',
+  youtube:'https://youtube.com/@luviandesarrollos',
+  linkedin:'',
+  whatsapp:''
+});
+let brand = load('brand', { logoCircular:'', logoHorizontal:'', favicon:'' });
+let eventos = load('eventos', [
+  { fecha:'Ago 2026', titulo:'Festival Provincial del Ternero', desc:'Presencia de Luvian Desarrollos con stand informativo sobre loteos y financiación propia.', lugar:'Makallé, Chaco' },
+  { fecha:'Sep 2026', titulo:'Bienal Internacional de Escultura', desc:'Auspiciamos la Bienal acompañando el desarrollo cultural de la región.', lugar:'Resistencia, Chaco' }
+]);
+let testimonios = load('testimonios', [
+  { nombre:'Familia Sánchez', texto:'El barrio es precioso. Compramos hace 6 meses y ya empezamos a construir.', estrellas:5 },
+  { nombre:'Pablo T.', texto:'Excelente relación precio-calidad. La financiación fue clave para nosotros.', estrellas:4 }
+]);
+let adminCreds = load('admin_creds', { user:'admin', pass:'admin123' });
+
+// ── APLICAR LOGO DE MARCA SI FUE SUBIDO ────────────────────────
+(function applyBrandLogo(){
+  if(brand.logoCircular) {
+    document.querySelectorAll('.login-logo-l, .sb-logo-icon').forEach(el=>{
+      el.style.background = `url('${brand.logoCircular}') center/cover`;
+      el.textContent = '';
+    });
+  }
+  if(brand.favicon) {
+    let link = document.querySelector("link[rel~='icon']");
+    if(!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+    link.href = brand.favicon;
+  }
+})();
+
+// ── LOGIN ──────────────────────────────────────────────────────
+function setLoginRole(role, btn) {
+  currentRole = role;
+  document.querySelectorAll('.l-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const creds = currentRole==='admin' ? getAdminCreds() : USER_CREDS;
+  if(u===creds.user && p===creds.pass) {
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    sessionStorage.setItem('luvian_session_exp', String(Date.now() + 30*60*1000));
+    initApp();
+  } else {
+    const err = document.getElementById('loginError');
+    err.style.display='block';
+    setTimeout(()=>err.style.display='none',2500);
+  }
+}
+function logout() {
+  sessionStorage.removeItem('luvian_session_exp');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+}
+setInterval(()=>{
+  const exp = +sessionStorage.getItem('luvian_session_exp');
+  if(exp && Date.now() > exp && document.getElementById('app').style.display==='flex') {
+    toast('Sesión expirada por inactividad', 'error');
+    logout();
+  }
+}, 60000);
+
+// ── INIT ──────────────────────────────────────────────────────
+function initApp() {
+  const isAdmin = currentRole==='admin';
+  document.getElementById('roleLabel').textContent = isAdmin ? 'ADMINISTRADOR' : 'USUARIO';
+  document.getElementById('sbAvatar').textContent = isAdmin ? 'A' : 'U';
+  document.getElementById('sbName').textContent = isAdmin ? 'Admin Luvian' : 'Usuario';
+  document.getElementById('sbRole').textContent = isAdmin ? 'Administrador' : 'Cliente';
+
+  const nav = document.getElementById('sbNav');
+  const unreadMsgs = mensajes.filter(m=>!m.leido).length;
+
+  if(isAdmin) {
+    nav.innerHTML = `
+      <div class="sb-section">Principal</div>
+      <div class="sb-item active" onclick="goPage('dashboard')"><span class="icon">📊</span>Dashboard</div>
+      <div class="sb-section">Publicaciones</div>
+      <div class="sb-item" onclick="goPage('propiedades')"><span class="icon">🏘</span>Propiedades</div>
+      <div class="sb-item" onclick="goPage('nueva-prop')"><span class="icon">➕</span>Nueva Publicación</div>
+      <div class="sb-section">Gestión</div>
+      <div class="sb-item" onclick="goPage('mensajes')"><span class="icon">✉️</span>Mensajes<span class="sb-badge">${unreadMsgs}</span></div>
+      <div class="sb-item" onclick="goPage('citas')"><span class="icon">📅</span>Citas & Visitas</div>
+      <div class="sb-item" onclick="goPage('presupuestos')"><span class="icon">💰</span>Presupuestos</div>
+      <div class="sb-section">Sistema</div>
+      <div class="sb-item" onclick="goPage('subcategorias')"><span class="icon">🗂</span>Subcategorías</div>
+      <div class="sb-item" onclick="goPage('eventos')"><span class="icon">📆</span>Eventos</div>
+      <div class="sb-item" onclick="goPage('testimonios')"><span class="icon">💬</span>Testimonios</div>
+      <div class="sb-item" onclick="goPage('configuracion')"><span class="icon">⚙️</span>Configuración</div>
+      <a class="sb-item" href="index.html" target="_blank"><span class="icon">🌐</span>Ver sitio web</a>
+    `;
+    goPage('dashboard');
+  } else {
+    nav.innerHTML = `
+      <div class="sb-section">Mi cuenta</div>
+      <div class="sb-item active" onclick="goPage('u-inicio')"><span class="icon">🏠</span>Inicio</div>
+      <div class="sb-item" onclick="goPage('u-favoritos')"><span class="icon">♡</span>Mis Favoritos<span class="sb-badge oro">${favs.length}</span></div>
+      <div class="sb-item" onclick="goPage('u-citas')"><span class="icon">📅</span>Mis Citas</div>
+      <div class="sb-item" onclick="goPage('u-presupuestos')"><span class="icon">💰</span>Mis Presupuestos</div>
+      <div class="sb-section">Explorar</div>
+      <a class="sb-item" href="index.html" target="_blank"><span class="icon">🌐</span>Ver propiedades</a>
+      <div class="sb-item" onclick="goPage('u-contacto')"><span class="icon">✉️</span>Contactar asesor</div>
+    `;
+    goPage('u-inicio');
+  }
+  if(window.innerWidth<900) document.getElementById('menuToggle').style.display='block';
+}
+
+// ── PAGES ─────────────────────────────────────────────────────
+const pageTitles = {
+  'dashboard':'Dashboard', 'propiedades':'Gestión de Propiedades', 'nueva-prop':'Nueva Publicación',
+  'mensajes':'Mensajes de Contacto', 'citas':'Citas y Visitas', 'presupuestos':'Presupuestos',
+  'subcategorias':'Subcategorías', 'eventos':'Próximos Eventos', 'testimonios':'Testimonios',
+  'configuracion':'Configuración General',
+  'u-inicio':'Mi Panel', 'u-favoritos':'Mis Favoritos', 'u-citas':'Mis Citas',
+  'u-presupuestos':'Mis Presupuestos', 'u-contacto':'Contactar Asesor'
+};
+
+function goPage(id) {
+  currentPage = id;
+  document.getElementById('pageTitle').textContent = pageTitles[id] || id;
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>{ if(i.onclick && i.onclick.toString().includes(`'${id}'`)) i.classList.add('active'); });
+  const pagesDiv = document.getElementById('pages');
+  pagesDiv.innerHTML = '';
+  const page = document.createElement('div');
+  page.className = 'page active';
+  page.id = 'page-'+id;
+  pagesDiv.appendChild(page);
+  const tb = document.getElementById('topbarActions');
+  tb.innerHTML = '';
+
+  const renders = {
+    'dashboard': renderDashboard,
+    'propiedades': renderPropiedades,
+    'nueva-prop': renderNuevaProp,
+    'mensajes': renderMensajes,
+    'citas': renderCitas,
+    'presupuestos': renderPresupuestos,
+    'subcategorias': renderSubcategorias,
+    'eventos': renderEventos,
+    'testimonios': renderTestimonios,
+    'configuracion': renderConfiguracion,
+    'u-inicio': renderUserInicio,
+    'u-favoritos': renderUserFavs,
+    'u-citas': renderUserCitas,
+    'u-presupuestos': renderUserPresups,
+    'u-contacto': renderUserContacto,
+  };
+  if(renders[id]) renders[id](page);
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+function renderDashboard(p) {
+  const unread = mensajes.filter(m=>!m.leido).length;
+  const pend = citas.filter(c=>c.estado==='pendiente').length;
+  p.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-header"><span class="stat-card-icon">🏘</span><span class="stat-card-trend">+2 este mes</span></div>
+        <div class="stat-card-num">${propiedades.length}</div>
+        <div class="stat-card-label">Propiedades activas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><span class="stat-card-icon">✉️</span><span class="stat-card-trend" style="color:var(--naranja)">${unread} sin leer</span></div>
+        <div class="stat-card-num">${mensajes.length}</div>
+        <div class="stat-card-label">Mensajes recibidos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><span class="stat-card-icon">📅</span><span class="stat-card-trend" style="color:var(--naranja)">${pend} pendientes</span></div>
+        <div class="stat-card-num">${citas.length}</div>
+        <div class="stat-card-label">Citas agendadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><span class="stat-card-icon">💰</span><span class="stat-card-trend">+1 esta semana</span></div>
+        <div class="stat-card-num">${presupuestos.length}</div>
+        <div class="stat-card-label">Presupuestos enviados</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Mensajes recientes</div><button class="btn-sm btn-view" onclick="goPage('mensajes')">Ver todos →</button></div>
+        <div class="card-body">
+          <table>
+            <thead><tr><th>Cliente</th><th>Interés</th><th>Fecha</th><th>Estado</th></tr></thead>
+            <tbody>${mensajes.slice(0,4).map(m=>`
+              <tr onclick="openMsgModal(${m.id})" style="cursor:pointer">
+                <td><strong>${m.nombre}</strong><br><span style="font-size:11px;color:rgba(255,255,255,0.4)">${m.email}</span></td>
+                <td><span class="tag tag-${m.interes==='Lotes'?'lote':m.interes==='Viviendas'?'vivienda':'nave'}">${m.interes}</span></td>
+                <td style="font-size:12px;color:rgba(255,255,255,0.4)">${m.fecha}</td>
+                <td><span class="tag ${m.leido?'tag-leido':'tag-nuevo'}">${m.leido?'Leído':'Nuevo'}</span></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Próximas citas</div><button class="btn-sm btn-view" onclick="goPage('citas')">Calendario →</button></div>
+        <div class="card-body">
+          ${citas.slice(0,3).map(c=>`
+            <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.04)">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+                <strong style="font-size:13px">${c.cliente}</strong>
+                <span class="tag tag-${c.estado}">${c.estado}</span>
+              </div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.5)">📅 ${c.fecha} · ${c.hora}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px">📍 ${c.tipo}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-header"><div class="card-title">Distribución de propiedades</div></div>
+      <div style="padding:20px;display:flex;gap:32px;align-items:center;flex-wrap:wrap">
+        ${['lote','vivienda','nave'].map(t=>{
+          const count = propiedades.filter(p=>p.tipo===t).length;
+          const pct = Math.round((count/propiedades.length)*100)||0;
+          return `<div style="text-align:center">
+            <div style="font-size:1.8rem;font-family:'Cormorant Garamond',serif;color:var(--oro);font-weight:700">${count}</div>
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:8px">${t==='lote'?'Lotes':t==='vivienda'?'Viviendas':'Naves'}</div>
+            <div style="width:80px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:var(--oro);border-radius:3px"></div>
+            </div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px">${pct}%</div>
+          </div>`;
+        }).join('')}
+        <div style="flex:1;min-width:200px">
+          <div class="mini-chart" id="dashChart"></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);text-align:center;margin-top:4px;letter-spacing:1px">VISITAS ÚLTIMOS 7 DÍAS</div>
+        </div>
+      </div>
+    </div>
+  `;
+  // mini chart
+  const vals = [30,55,40,70,45,80,65];
+  const max = Math.max(...vals);
+  document.getElementById('dashChart').innerHTML = vals.map((v,i)=>
+    `<div class="bar ${i===6?'active':''}" style="height:${(v/max)*100}%"></div>`
+  ).join('');
+}
+
+// ── PROPIEDADES ADMIN ──────────────────────────────────────────
+function renderPropiedades(p) {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn-primary" onclick="goPage('nueva-prop')">+ Nueva publicación</button>`;
+  p.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <input id="propSearch" type="text" placeholder="Buscar por título o zona..." oninput="filterPropTable()" style="flex:1;min-width:200px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:2px;padding:10px 14px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;">
+      <select id="propTipoFilter" onchange="filterPropTable()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:2px;padding:10px 14px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;">
+        <option value="">Todos los tipos</option>
+        <option value="lote">Lotes</option>
+        <option value="vivienda">Viviendas</option>
+        <option value="nave">Naves</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Publicaciones (${propiedades.length})</div></div>
+      <div class="card-body"><table>
+        <thead><tr><th>ID</th><th>Imagen</th><th>Título</th><th>Tipo</th><th>Precio</th><th>Zona</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="propTableBody"></tbody>
+      </table></div>
+    </div>
+  `;
+  filterPropTable();
+}
+
+function filterPropTable() {
+  const q = (document.getElementById('propSearch')?.value||'').toLowerCase();
+  const t = document.getElementById('propTipoFilter')?.value||'';
+  const filtered = propiedades.filter(p=>
+    (!q || p.titulo.toLowerCase().includes(q) || p.zona.toLowerCase().includes(q)) &&
+    (!t || p.tipo===t)
+  );
+  const tbody = document.getElementById('propTableBody');
+  if(!tbody) return;
+  tbody.innerHTML = filtered.map(p=>`
+    <tr>
+      <td style="color:rgba(255,255,255,0.35);font-size:11px">#${p.id}</td>
+      <td><img src="${p.imgs[0]}" style="width:60px;height:44px;object-fit:cover;border-radius:2px;display:block;border:1px solid rgba(201,168,76,0.15)"></td>
+      <td>
+        <strong style="font-size:13px">${p.titulo}</strong>
+        ${p.oferta?'<span class="tag" style="margin-left:6px;background:rgba(231,76,60,0.15);color:#e74c3c;border-color:rgba(231,76,60,0.2);font-size:9px">OFERTA</span>':''}
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px">📐 ${p.sup}</div>
+      </td>
+      <td><span class="tag tag-${p.tipo}">${p.tipo==='lote'?'Lote':p.tipo==='vivienda'?'Vivienda':'Nave'}</span></td>
+      <td style="color:var(--oro);font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600">${p.precio}</td>
+      <td style="font-size:12px;color:rgba(255,255,255,0.6)">📍 ${p.zona}</td>
+      <td>
+        <div class="toggle-wrap">
+          <label class="toggle"><input type="checkbox" ${p.estado==='activo'?'checked':''} onchange="togglePropEstado(${p.id},this)"><span class="toggle-slider"></span></label>
+          <span style="font-size:11px;color:rgba(255,255,255,0.4)">${p.estado}</span>
+        </div>
+      </td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-sm btn-edit" onclick="editProp(${p.id})">✏ Editar</button>
+          <button class="btn-sm btn-del" onclick="delProp(${p.id})">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function togglePropEstado(id, el) {
+  const p = propiedades.find(p=>p.id===id);
+  if(p) { p.estado = el.checked?'activo':'pausado'; store('props',propiedades); toast('Estado actualizado','success'); }
+}
+
+function editProp(id) {
+  const p = propiedades.find(p=>p.id===id);
+  if(!p) return;
+  openModal('Editar Publicación', buildPropForm(p));
+}
+
+function delProp(id) {
+  if(!confirm('¿Eliminar esta publicación?')) return;
+  propiedades = propiedades.filter(p=>p.id!==id);
+  store('props',propiedades);
+  goPage('propiedades');
+  toast('Publicación eliminada','success');
+}
+
+function buildPropForm(prop={}) {
+  const edit = !!prop.id;
+  return `
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Título de la publicación</label>
+        <input type="text" id="pf-titulo" value="${prop.titulo||''}" placeholder="Ej: Lote Residencial — Barrio Don Bosco">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="pf-tipo">
+          <option value="lote" ${prop.tipo==='lote'?'selected':''}>Lote</option>
+          <option value="vivienda" ${prop.tipo==='vivienda'?'selected':''}>Vivienda</option>
+          <option value="nave" ${prop.tipo==='nave'?'selected':''}>Nave Industrial</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Precio</label>
+        <input type="text" id="pf-precio" value="${prop.precio||''}" placeholder="Ej: USD 25.000">
+      </div>
+      <div class="form-group">
+        <label>Zona / Barrio</label>
+        <input type="text" id="pf-zona" value="${prop.zona||''}" placeholder="Ej: Resistencia Norte">
+      </div>
+      <div class="form-group">
+        <label>Superficie</label>
+        <input type="text" id="pf-sup" value="${prop.sup||''}" placeholder="Ej: 450 m²">
+      </div>
+      <div class="form-group full">
+        <label>Descripción</label>
+        <textarea id="pf-desc" rows="3" placeholder="Descripción detallada de la propiedad...">${prop.desc||''}</textarea>
+      </div>
+      <div class="form-group full">
+        <label>Características (separadas por coma)</label>
+        <input type="text" id="pf-features" value="${prop.features||''}" placeholder="Ej: 3 ambientes, Garage, Jardín">
+      </div>
+      <div class="form-group full">
+        <label>URL de imagen principal</label>
+        <input type="text" id="pf-img" value="${prop.imgs?.[0]||''}" placeholder="https://... (URL de imagen)">
+      </div>
+      <div class="form-group">
+        <label>En oferta</label>
+        <select id="pf-oferta">
+          <option value="false" ${!prop.oferta?'selected':''}>No</option>
+          <option value="true" ${prop.oferta?'selected':''}>Sí — Oferta especial</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="pf-estado">
+          <option value="activo" ${prop.estado==='activo'?'selected':''}>Activo</option>
+          <option value="pausado" ${prop.estado==='pausado'?'selected':''}>Pausado</option>
+          <option value="vendido" ${prop.estado==='vendido'?'selected':''}>Vendido</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:22px">
+      <button class="btn-primary" onclick="saveProp(${prop.id||0})" style="flex:1">${edit?'Guardar cambios →':'Publicar →'}</button>
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  `;
+}
+
+// ── NUEVA PROP ─────────────────────────────────────────────────
+function renderNuevaProp(p) {
+  p.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Datos de la publicación</div></div>
+      <div class="card-body" style="padding:24px">
+        ${buildPropForm()}
+      </div>
+    </div>
+  `;
+}
+
+function saveProp(id) {
+  const titulo = document.getElementById('pf-titulo')?.value?.trim();
+  if(!titulo) { toast('Completá el título','error'); return; }
+  const data = {
+    titulo, tipo: document.getElementById('pf-tipo').value,
+    precio: document.getElementById('pf-precio').value,
+    zona: document.getElementById('pf-zona').value,
+    sup: document.getElementById('pf-sup').value,
+    desc: document.getElementById('pf-desc').value,
+    features: document.getElementById('pf-features').value,
+    imgs: [document.getElementById('pf-img').value || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=70'],
+    oferta: document.getElementById('pf-oferta').value==='true',
+    estado: document.getElementById('pf-estado').value,
+    fecha: new Date().toISOString().slice(0,10),
+  };
+  if(id) {
+    const idx = propiedades.findIndex(p=>p.id===id);
+    if(idx>-1) { propiedades[idx] = {...propiedades[idx], ...data}; }
+  } else {
+    data.id = Date.now();
+    propiedades.push(data);
+  }
+  store('props',propiedades);
+  closeModal();
+  goPage('propiedades');
+  toast(`Propiedad ${id?'actualizada':'publicada'} exitosamente ✓`,'success');
+}
+
+// ── MENSAJES ──────────────────────────────────────────────────
+function renderMensajes(p) {
+  const unread = mensajes.filter(m=>!m.leido).length;
+  p.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div class="stat-card" style="padding:18px 20px">
+        <div class="stat-card-num" style="font-size:1.8rem">${mensajes.length}</div>
+        <div class="stat-card-label">Total mensajes</div>
+      </div>
+      <div class="stat-card" style="padding:18px 20px">
+        <div class="stat-card-num" style="font-size:1.8rem;color:var(--naranja)">${unread}</div>
+        <div class="stat-card-label">Sin leer</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Bandeja de entrada</div></div>
+      <div class="msg-list" id="msgList">
+        ${mensajes.map(m=>`
+          <div class="msg-item ${m.leido?'':'unread'}" onclick="openMsgModal(${m.id})">
+            <div class="msg-avatar">${m.nombre.charAt(0)}</div>
+            <div class="msg-content">
+              <div class="msg-header">
+                <span class="msg-name">${m.nombre} ${m.leido?'':'<span style="width:8px;height:8px;background:var(--oro);border-radius:50%;display:inline-block;margin-left:6px"></span>'}</span>
+                <span class="msg-time">${m.fecha}</span>
+              </div>
+              <div class="msg-preview">${m.msg.substring(0,120)}...</div>
+              <div class="msg-tags">
+                <span class="tag tag-${m.interes==='Lotes'?'lote':m.interes==='Viviendas'?'vivienda':'nave'}">${m.interes}</span>
+                <span class="tag ${m.leido?'tag-leido':'tag-nuevo'}">${m.leido?'Leído':'Nuevo'}</span>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function openMsgModal(id) {
+  const m = mensajes.find(m=>m.id===id);
+  if(!m) return;
+  m.leido = true;
+  store('msgs',mensajes);
+  openModal(`Mensaje de ${m.nombre}`, `
+    <div style="background:rgba(255,255,255,0.04);border-radius:3px;padding:18px;margin-bottom:20px;border:1px solid rgba(201,168,76,0.1)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div><div style="font-size:10px;letter-spacing:2px;color:var(--oro);text-transform:uppercase;margin-bottom:4px">Cliente</div><div style="font-size:14px;font-weight:500">${m.nombre}</div></div>
+        <div><div style="font-size:10px;letter-spacing:2px;color:var(--oro);text-transform:uppercase;margin-bottom:4px">Email</div><div style="font-size:13px">${m.email}</div></div>
+        <div><div style="font-size:10px;letter-spacing:2px;color:var(--oro);text-transform:uppercase;margin-bottom:4px">Teléfono</div><div style="font-size:13px">${m.tel}</div></div>
+        <div><div style="font-size:10px;letter-spacing:2px;color:var(--oro);text-transform:uppercase;margin-bottom:4px">Interés</div><div style="font-size:13px">${m.interes}</div></div>
+      </div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--oro);text-transform:uppercase;margin-bottom:8px">Mensaje</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.7">${m.msg}</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="closeModal();goPage('presupuestos');setTimeout(()=>newPresup('${m.nombre}','${m.email}'),100)">💰 Crear presupuesto</button>
+      <button class="btn-primary" style="background:linear-gradient(135deg,#2ecc71,#27ae60)" onclick="closeModal();goPage('citas');setTimeout(()=>newCita('${m.nombre}','${m.tel}'),100)">📅 Agendar cita</button>
+      <a href="https://wa.me/${m.tel.replace(/\D/g,'')}" target="_blank" class="btn-ghost" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">💬 WhatsApp</a>
+      <a href="mailto:${m.email}" class="btn-ghost" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">✉ Responder email</a>
+    </div>
+  `);
+}
+
+// ── CITAS ─────────────────────────────────────────────────────
+function renderCitas(p) {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn-primary" onclick="newCita()">+ Nueva cita</button>`;
+  // simple calendar for June 2025
+  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const citasDates = citas.map(c=>c.fecha);
+  let calHtml = `<div class="calendar-grid">`;
+  days.forEach(d=>calHtml+=`<div class="cal-header">${d}</div>`);
+  // June 2025 starts on Sunday
+  for(let i=0;i<1;i++) calHtml+=`<div></div>`;
+  for(let d=1;d<=30;d++){
+    const dateStr = `2025-06-${String(d).padStart(2,'0')}`;
+    const dayCitas = citas.filter(c=>c.fecha===dateStr);
+    const isToday = d===5;
+    calHtml+=`<div class="cal-day ${isToday?'today':''} ${dayCitas.length?'has-event':''}">
+      <div class="cal-day-num">${d}</div>
+      ${dayCitas.map(c=>`<div class="cal-event ${c.estado==='confirmada'?'oro':''}" title="${c.cliente}">${c.hora} ${c.cliente.split(' ')[0]}</div>`).join('')}
+    </div>`;
+  }
+  calHtml+=`</div>`;
+
+  p.innerHTML = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Calendario — Junio 2025</div></div>
+      <div style="padding:20px">${calHtml}</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Todas las citas (${citas.length})</div></div>
+      <div class="card-body"><table>
+        <thead><tr><th>Cliente</th><th>Tipo</th><th>Propiedad</th><th>Fecha y hora</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>${citas.map(c=>`
+          <tr>
+            <td><strong>${c.cliente}</strong><br><span style="font-size:11px;color:rgba(255,255,255,0.4)">${c.tel}</span></td>
+            <td style="font-size:12px">${c.tipo}</td>
+            <td style="font-size:12px;color:rgba(255,255,255,0.6)">${c.propiedad}</td>
+            <td><strong>${c.fecha}</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.5)">${c.hora}</span></td>
+            <td><span class="tag tag-${c.estado}">${c.estado}</span></td>
+            <td>
+              <div class="action-btns">
+                ${c.estado==='pendiente'?`<button class="btn-sm btn-send" onclick="confirmCita(${c.id})">✓ Confirmar</button>`:''}
+                <button class="btn-sm btn-edit" onclick="editCita(${c.id})">✏</button>
+                <button class="btn-sm btn-del" onclick="delCita(${c.id})">🗑</button>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+function newCita(cliente='', tel='') {
+  openModal('Nueva Cita / Visita', `
+    <div class="form-grid">
+      <div class="form-group"><label>Cliente</label><input id="cf-cliente" type="text" value="${cliente}" placeholder="Nombre completo"></div>
+      <div class="form-group"><label>Teléfono</label><input id="cf-tel" type="text" value="${tel}" placeholder="+54 362..."></div>
+      <div class="form-group"><label>Tipo de cita</label>
+        <select id="cf-tipo"><option>Visita a propiedad</option><option>Consulta oficina</option><option>Firma de documentos</option><option>Videollamada</option></select>
+      </div>
+      <div class="form-group"><label>Propiedad</label>
+        <select id="cf-prop"><option value="">Sin propiedad específica</option>${propiedades.map(p=>`<option>${p.titulo}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Fecha</label><input id="cf-fecha" type="date" value="2025-06-05"></div>
+      <div class="form-group"><label>Hora</label><input id="cf-hora" type="time" value="10:00"></div>
+      <div class="form-group full"><label>Notas</label><textarea id="cf-notas" rows="2" placeholder="Observaciones..."></textarea></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn-primary" onclick="saveCita()" style="flex:1">Agendar cita →</button>
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+}
+
+function saveCita() {
+  const cliente = document.getElementById('cf-cliente')?.value?.trim();
+  if(!cliente){ toast('Ingresá el nombre del cliente','error'); return; }
+  citas.push({
+    id: Date.now(),
+    cliente, tel: document.getElementById('cf-tel').value,
+    tipo: document.getElementById('cf-tipo').value,
+    propiedad: document.getElementById('cf-prop').value||'Sin especificar',
+    fecha: document.getElementById('cf-fecha').value,
+    hora: document.getElementById('cf-hora').value,
+    estado: 'pendiente',
+    notas: document.getElementById('cf-notas').value,
+  });
+  store('citas',citas);
+  closeModal(); goPage('citas');
+  toast('Cita agendada exitosamente ✓','success');
+}
+
+function confirmCita(id) {
+  const c = citas.find(c=>c.id===id);
+  if(c){ c.estado='confirmada'; store('citas',citas); goPage('citas'); toast('Cita confirmada ✓','success'); }
+}
+
+function editCita(id) {
+  const c = citas.find(c=>c.id===id);
+  if(!c) return;
+  openModal('Editar Cita', `
+    <div class="form-grid">
+      <div class="form-group"><label>Estado</label>
+        <select id="ce-estado"><option value="pendiente" ${c.estado==='pendiente'?'selected':''}>Pendiente</option><option value="confirmada" ${c.estado==='confirmada'?'selected':''}>Confirmada</option><option value="cancelada" ${c.estado==='cancelada'?'selected':''}>Cancelada</option></select>
+      </div>
+      <div class="form-group"><label>Notas</label><input id="ce-notas" type="text" value="${c.notas}"></div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:16px" onclick="updateCita(${id})">Guardar →</button>
+  `);
+}
+
+function updateCita(id) {
+  const c = citas.find(c=>c.id===id);
+  if(c){ c.estado=document.getElementById('ce-estado').value; c.notas=document.getElementById('ce-notas').value; store('citas',citas); }
+  closeModal(); goPage('citas'); toast('Cita actualizada ✓','success');
+}
+
+function delCita(id) {
+  if(!confirm('¿Eliminar esta cita?')) return;
+  citas = citas.filter(c=>c.id!==id); store('citas',citas); goPage('citas'); toast('Cita eliminada','success');
+}
+
+// ── PRESUPUESTOS ──────────────────────────────────────────────
+function renderPresupuestos(p) {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn-primary" onclick="newPresup()">+ Nuevo presupuesto</button>`;
+  p.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Presupuestos enviados</div></div>
+      <div class="card-body"><table>
+        <thead><tr><th>Cliente</th><th>Concepto</th><th>Total</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>${presupuestos.map(pr=>`
+          <tr>
+            <td><strong>${pr.cliente}</strong><br><span style="font-size:11px;color:rgba(255,255,255,0.4)">${pr.email}</span></td>
+            <td style="font-size:12px;color:rgba(255,255,255,0.7);max-width:220px">${pr.concepto}</td>
+            <td style="color:var(--oro);font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700">${pr.total}</td>
+            <td style="font-size:12px;color:rgba(255,255,255,0.4)">${pr.fecha}</td>
+            <td><span class="tag tag-${pr.estado==='enviado'?'nuevo':'leido'}">${pr.estado}</span></td>
+            <td><div class="action-btns">
+              <button class="btn-sm btn-view" onclick="viewPresup(${pr.id})">👁 Ver</button>
+              <button class="btn-sm btn-del" onclick="delPresup(${pr.id})">🗑</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+function newPresup(cliente='', email='') {
+  openModal('Nuevo Presupuesto', `
+    <div class="form-grid">
+      <div class="form-group"><label>Cliente</label><input id="pres-cliente" type="text" value="${cliente}" placeholder="Nombre del cliente"></div>
+      <div class="form-group"><label>Email</label><input id="pres-email" type="email" value="${email}" placeholder="email@cliente.com"></div>
+    </div>
+    <div style="margin:18px 0 8px;font-size:10px;letter-spacing:2px;color:var(--oro);text-transform:uppercase;font-weight:500">Ítems del presupuesto</div>
+    <div id="presItems">
+      ${[['Propiedad seleccionada',''],['Gastos de escrituración',''],['Honorarios inmobiliarios','']].map((item,i)=>`
+      <div class="presup-item">
+        <input type="text" placeholder="Concepto..." value="${item[0]}" style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:2px;padding:9px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none">
+        <input type="text" placeholder="USD 0" value="${item[1]}" oninput="calcTotal()" style="width:120px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:2px;padding:9px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;text-align:right">
+        <button onclick="this.parentElement.remove();calcTotal()" style="background:rgba(231,76,60,0.15);border:none;color:#e74c3c;border-radius:2px;padding:8px 10px;cursor:pointer;font-size:13px">✕</button>
+      </div>`).join('')}
+    </div>
+    <button onclick="addPresupItem()" class="btn-ghost" style="width:100%;margin-top:10px;font-size:12px">+ Agregar ítem</button>
+    <div class="presup-total">
+      <div class="presup-total-label">Total presupuestado</div>
+      <div class="presup-total-val" id="presTotal">USD 0</div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:18px">
+      <button class="btn-primary" onclick="savePresup()" style="flex:1">Guardar y enviar →</button>
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+  calcTotal();
+}
+
+function addPresupItem() {
+  const div = document.createElement('div');
+  div.className='presup-item';
+  div.innerHTML=`
+    <input type="text" placeholder="Concepto..." style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:2px;padding:9px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none">
+    <input type="text" placeholder="USD 0" oninput="calcTotal()" style="width:120px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:2px;padding:9px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;text-align:right">
+    <button onclick="this.parentElement.remove();calcTotal()" style="background:rgba(231,76,60,0.15);border:none;color:#e74c3c;border-radius:2px;padding:8px 10px;cursor:pointer;font-size:13px">✕</button>`;
+  document.getElementById('presItems').appendChild(div);
+}
+
+function calcTotal() {
+  const inputs = document.querySelectorAll('#presItems .presup-item input:last-of-type');
+  let total = 0;
+  inputs.forEach(i=>{ const n=parseFloat(i.value.replace(/[^0-9.]/g,'')); if(!isNaN(n)) total+=n; });
+  const el = document.getElementById('presTotal');
+  if(el) el.textContent = 'USD ' + total.toLocaleString('es-AR');
+}
+
+function savePresup() {
+  const cliente = document.getElementById('pres-cliente')?.value?.trim();
+  if(!cliente){ toast('Ingresá el nombre del cliente','error'); return; }
+  const items = [];
+  document.querySelectorAll('#presItems .presup-item').forEach(row=>{
+    const ins = row.querySelectorAll('input');
+    if(ins[0].value) items.push(ins[0].value + ': ' + (ins[1].value||'$0'));
+  });
+  const totalEl = document.getElementById('presTotal');
+  presupuestos.push({
+    id: Date.now(),
+    cliente, email: document.getElementById('pres-email').value,
+    concepto: items.join(' · '),
+    total: totalEl?.textContent||'USD 0',
+    fecha: new Date().toISOString().slice(0,10),
+    estado:'enviado'
+  });
+  store('presups',presupuestos);
+  closeModal(); goPage('presupuestos');
+  toast('Presupuesto enviado exitosamente ✓','success');
+}
+
+function viewPresup(id) {
+  const pr = presupuestos.find(p=>p.id===id);
+  if(!pr) return;
+  openModal(`Presupuesto — ${pr.cliente}`, `
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.15);border-radius:4px;padding:24px;margin-bottom:16px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;letter-spacing:3px;font-weight:700">LUVIAN</div>
+        <div style="font-size:9px;letter-spacing:2.5px;color:var(--oro);text-transform:uppercase">Presupuesto Inmobiliario</div>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--oro),transparent);margin:14px 0"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;font-size:13px">
+        <div><span style="color:rgba(255,255,255,0.4)">Cliente: </span>${pr.cliente}</div>
+        <div><span style="color:rgba(255,255,255,0.4)">Email: </span>${pr.email}</div>
+        <div><span style="color:rgba(255,255,255,0.4)">Fecha: </span>${pr.fecha}</div>
+        <div><span style="color:rgba(255,255,255,0.4)">Estado: </span>${pr.estado}</div>
+      </div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--oro);text-transform:uppercase;margin-bottom:10px">Detalle</div>
+      ${pr.concepto.split(' · ').map(item=>`<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;color:rgba(255,255,255,0.7)">${item}</div>`).join('')}
+      <div style="margin-top:16px;padding:14px;background:rgba(201,168,76,0.08);border-radius:2px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:11px;letter-spacing:2px;color:var(--oro);text-transform:uppercase">Total</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--oro);font-weight:700">${pr.total}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-ghost" onclick="window.print()" style="flex:1">🖨 Imprimir</button>
+      <button class="btn-ghost" onclick="closeModal()">Cerrar</button>
+    </div>
+  `);
+}
+
+function delPresup(id) {
+  if(!confirm('¿Eliminar presupuesto?')) return;
+  presupuestos = presupuestos.filter(p=>p.id!==id); store('presups',presupuestos); goPage('presupuestos');
+  toast('Presupuesto eliminado','success');
+}
+
+// ── SUBCATEGORÍAS ─────────────────────────────────────────────
+let subcats = load('subcats', [
+  { id:1, nombre:'Lotes rurales', parent:'lote', desc:'Campos y tierras productivas' },
+  { id:2, nombre:'Lotes en barrio cerrado', parent:'lote', desc:'Con amenities y seguridad' },
+  { id:3, nombre:'Casas a estrenar', parent:'vivienda', desc:'Construcción nueva lista para entrar' },
+]);
+
+function renderSubcategorias(p) {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn-primary" onclick="newSubcat()">+ Nueva subcategoría</button>`;
+  p.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px">
+      ${['lote','vivienda','nave'].map(t=>`
+        <div class="card">
+          <div class="card-header" style="padding:14px 18px">
+            <div class="card-title" style="font-size:1rem">${t==='lote'?'🏜 Lotes':t==='vivienda'?'🏠 Viviendas':'🏭 Naves'}</div>
+            <button class="btn-sm btn-edit" onclick="newSubcat('${t}')">+ Añadir</button>
+          </div>
+          <div style="padding:0 0 8px">
+            ${subcats.filter(s=>s.parent===t).map(s=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.04)">
+                <div>
+                  <div style="font-size:13px;font-weight:500">${s.nombre}</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.35)">${s.desc}</div>
+                </div>
+                <button class="btn-sm btn-del" onclick="delSubcat(${s.id})">✕</button>
+              </div>`).join('')||'<div style="padding:14px 18px;font-size:13px;color:rgba(255,255,255,0.3)">Sin subcategorías</div>'}
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function newSubcat(parent='lote') {
+  openModal('Nueva Subcategoría', `
+    <div class="form-grid">
+      <div class="form-group"><label>Nombre</label><input id="sc-name" type="text" placeholder="Ej: Lotes con escritura"></div>
+      <div class="form-group"><label>Categoría padre</label>
+        <select id="sc-parent"><option value="lote" ${parent==='lote'?'selected':''}>Lotes</option><option value="vivienda" ${parent==='vivienda'?'selected':''}>Viviendas</option><option value="nave" ${parent==='nave'?'selected':''}>Naves</option></select>
+      </div>
+      <div class="form-group full"><label>Descripción</label><input id="sc-desc" type="text" placeholder="Breve descripción..."></div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:16px" onclick="saveSubcat()">Crear subcategoría →</button>
+  `);
+}
+
+function saveSubcat() {
+  const n = document.getElementById('sc-name')?.value?.trim();
+  if(!n){ toast('Ingresá un nombre','error'); return; }
+  subcats.push({ id:Date.now(), nombre:n, parent:document.getElementById('sc-parent').value, desc:document.getElementById('sc-desc').value });
+  store('subcats',subcats); closeModal(); goPage('subcategorias');
+  toast('Subcategoría creada ✓','success');
+}
+
+function delSubcat(id) {
+  subcats = subcats.filter(s=>s.id!==id); store('subcats',subcats); goPage('subcategorias');
+}
+
+// ── EVENTOS ───────────────────────────────────────────────────
+function renderEventos(p) {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn-primary" onclick="newEvento()">+ Nuevo evento</button>`;
+  p.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Próximos Eventos (visible en el sitio público)</div></div>
+      <table class="table">
+        <thead><tr><th>Fecha</th><th>Título</th><th>Lugar</th><th>Acciones</th></tr></thead>
+        <tbody>
+          ${eventos.map((e,i)=>`
+            <tr>
+              <td>${e.fecha}</td>
+              <td>${e.titulo}</td>
+              <td>${e.lugar}</td>
+              <td><button class="btn-sm btn-del" onclick="delEvento(${i})">Eliminar</button></td>
+            </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:rgba(255,255,255,0.3)">Sin eventos cargados</td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+}
+function newEvento() {
+  openModal('Nuevo Evento', `
+    <div class="form-grid">
+      <div class="form-group"><label>Fecha</label><input id="ev-fecha" type="text" placeholder="Ej: Ago 2026"></div>
+      <div class="form-group"><label>Lugar</label><input id="ev-lugar" type="text" placeholder="Ej: Resistencia, Chaco"></div>
+      <div class="form-group full"><label>Título</label><input id="ev-titulo" type="text" placeholder="Nombre del evento"></div>
+      <div class="form-group full"><label>Descripción</label><input id="ev-desc" type="text" placeholder="Breve descripción..."></div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:16px" onclick="saveEvento()">Crear evento →</button>
+  `);
+}
+function saveEvento() {
+  const t = document.getElementById('ev-titulo')?.value?.trim();
+  if(!t){ toast('Ingresá un título','error'); return; }
+  eventos.push({ fecha:document.getElementById('ev-fecha').value||'Próximamente', titulo:t, lugar:document.getElementById('ev-lugar').value, desc:document.getElementById('ev-desc').value });
+  store('eventos', eventos); closeModal(); goPage('eventos');
+  toast('Evento creado ✓','success');
+}
+function delEvento(i) {
+  eventos.splice(i,1); store('eventos', eventos); goPage('eventos');
+}
+
+// ── TESTIMONIOS ───────────────────────────────────────────────
+function renderTestimonios(p) {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn-primary" onclick="newTestimonio()">+ Nuevo testimonio</button>`;
+  p.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Testimonios de clientes (visible en el sitio público)</div></div>
+      <table class="table">
+        <thead><tr><th>Cliente</th><th>Testimonio</th><th>★</th><th>Acciones</th></tr></thead>
+        <tbody>
+          ${testimonios.map((t,i)=>`
+            <tr>
+              <td>${t.nombre}</td>
+              <td style="max-width:340px">${t.texto}</td>
+              <td>${'★'.repeat(t.estrellas)}${'☆'.repeat(5-t.estrellas)}</td>
+              <td><button class="btn-sm btn-del" onclick="delTestimonio(${i})">Eliminar</button></td>
+            </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:rgba(255,255,255,0.3)">Sin testimonios cargados</td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+}
+function newTestimonio() {
+  openModal('Nuevo Testimonio', `
+    <div class="form-grid">
+      <div class="form-group"><label>Cliente</label><input id="ts-nombre" type="text" placeholder="Nombre del cliente"></div>
+      <div class="form-group"><label>Estrellas (1-5)</label><input id="ts-estrellas" type="number" min="1" max="5" value="5"></div>
+      <div class="form-group full"><label>Testimonio</label><input id="ts-texto" type="text" placeholder="Comentario del cliente..."></div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:16px" onclick="saveTestimonio()">Publicar testimonio →</button>
+  `);
+}
+function saveTestimonio() {
+  const n = document.getElementById('ts-nombre')?.value?.trim();
+  const tx = document.getElementById('ts-texto')?.value?.trim();
+  if(!n || !tx){ toast('Completá cliente y testimonio','error'); return; }
+  testimonios.push({ nombre:n, texto:tx, estrellas:Math.min(5,Math.max(1,+document.getElementById('ts-estrellas').value||5)) });
+  store('testimonios', testimonios); closeModal(); goPage('testimonios');
+  toast('Testimonio publicado ✓','success');
+}
+function delTestimonio(i) {
+  testimonios.splice(i,1); store('testimonios', testimonios); goPage('testimonios');
+}
+
+// ── CONFIGURACIÓN GENERAL (BRAND / CONTACT / SOCIAL / LOGOS) ───
+let configTab = 'general';
+function renderConfiguracion(p) {
+  document.getElementById('topbarActions').innerHTML = '';
+  p.innerHTML = `
+    <div class="l-tabs" style="max-width:520px;margin-bottom:24px">
+      <button class="l-tab ${configTab==='general'?'active':''}" onclick="setConfigTab('general',this)">General</button>
+      <button class="l-tab ${configTab==='redes'?'active':''}" onclick="setConfigTab('redes',this)">Redes Sociales</button>
+      <button class="l-tab ${configTab==='logos'?'active':''}" onclick="setConfigTab('logos',this)">Logos</button>
+      <button class="l-tab ${configTab==='credenciales'?'active':''}" onclick="setConfigTab('credenciales',this)">Acceso Admin</button>
+    </div>
+    <div id="configTabBody"></div>
+  `;
+  renderConfigTabBody();
+}
+function setConfigTab(tab, btn) {
+  configTab = tab;
+  document.querySelectorAll('#pages .l-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderConfigTabBody();
+}
+function renderConfigTabBody() {
+  const el = document.getElementById('configTabBody');
+  if(configTab==='general') {
+    el.innerHTML = `
+      <div class="card" style="padding:24px">
+        <div class="form-grid">
+          <div class="form-group"><label>Nombre de la empresa</label><input id="cfg-empresa" value="${siteConfig.empresa}"></div>
+          <div class="form-group"><label>Eslogan</label><input id="cfg-eslogan" value="${siteConfig.eslogan}"></div>
+          <div class="form-group"><label>Teléfono a mostrar</label><input id="cfg-telefono" value="${siteConfig.telefono}"></div>
+          <div class="form-group"><label>Email</label><input id="cfg-email" value="${siteConfig.email}"></div>
+          <div class="form-group full"><label>Dirección</label><input id="cfg-direccion" value="${siteConfig.direccion}"></div>
+          <div class="form-group"><label>WhatsApp (código país + número, sin +)</label><input id="cfg-wa-num" value="${siteConfig.whatsappNumber}"></div>
+          <div class="form-group full"><label>Mensaje predeterminado de WhatsApp</label><input id="cfg-wa-msg" value="${siteConfig.whatsappMsg}"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:18px" onclick="saveGeneral()">Guardar información general →</button>
+      </div>`;
+  } else if(configTab==='redes') {
+    el.innerHTML = `
+      <div class="card" style="padding:24px">
+        <div class="form-grid">
+          <div class="form-group"><label>Instagram (URL)</label><input id="cfg-ig" value="${social.instagram}"></div>
+          <div class="form-group"><label>Facebook (URL)</label><input id="cfg-fb" value="${social.facebook}"></div>
+          <div class="form-group"><label>YouTube (URL)</label><input id="cfg-yt" value="${social.youtube}"></div>
+          <div class="form-group"><label>LinkedIn (URL)</label><input id="cfg-li" value="${social.linkedin}"></div>
+        </div>
+        <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:10px">Dejá un campo vacío para que ese ícono no se muestre en el sitio.</p>
+        <button class="btn-primary" style="margin-top:14px" onclick="saveRedes()">Guardar redes sociales →</button>
+      </div>`;
+  } else if(configTab==='logos') {
+    el.innerHTML = `
+      <div class="card" style="padding:24px">
+        <p style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:18px">Subí una imagen para cada versión del logo. Se optimiza automáticamente (WEBP) y se aplica en todo el sitio: header, footer, panel y favicon.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Logo Circular (512×512)</label>
+            <input type="file" accept="image/*" id="file-circular" onchange="handleLogoUpload(this,'logoCircular',512,512)">
+            <div id="prev-circular" style="margin-top:10px">${brand.logoCircular?`<img src="${brand.logoCircular}" style="width:64px;height:64px;border-radius:50%;object-fit:cover">`:''}</div>
+          </div>
+          <div class="form-group">
+            <label>Logo Horizontal (1200×400)</label>
+            <input type="file" accept="image/*" id="file-horizontal" onchange="handleLogoUpload(this,'logoHorizontal',1200,400)">
+            <div id="prev-horizontal" style="margin-top:10px">${brand.logoHorizontal?`<img src="${brand.logoHorizontal}" style="height:48px;object-fit:contain">`:''}</div>
+          </div>
+          <div class="form-group">
+            <label>Favicon (64×64)</label>
+            <input type="file" accept="image/*" id="file-favicon" onchange="handleLogoUpload(this,'favicon',64,64)">
+            <div id="prev-favicon" style="margin-top:10px">${brand.favicon?`<img src="${brand.favicon}" style="width:32px;height:32px;object-fit:contain">`:''}</div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:14px">Los archivos se guardan localmente en este navegador. Para sincronizar automáticamente desde Google Drive se requiere conectar la API de Drive (ver README del proyecto).</p>
+      </div>`;
+  } else if(configTab==='credenciales') {
+    const c = getAdminCreds();
+    el.innerHTML = `
+      <div class="card" style="padding:24px;max-width:420px">
+        <div class="form-grid">
+          <div class="form-group full"><label>Usuario administrador</label><input id="cfg-admin-user" value="${c.user}"></div>
+          <div class="form-group full"><label>Nueva contraseña</label><input id="cfg-admin-pass" type="password" placeholder="Dejar en blanco para no cambiar"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:14px" onclick="saveCredenciales()">Actualizar credenciales →</button>
+      </div>`;
+  }
+}
+function saveGeneral() {
+  siteConfig = {
+    ...siteConfig,
+    empresa: document.getElementById('cfg-empresa').value,
+    eslogan: document.getElementById('cfg-eslogan').value,
+    telefono: document.getElementById('cfg-telefono').value,
+    email: document.getElementById('cfg-email').value,
+    direccion: document.getElementById('cfg-direccion').value,
+    whatsappNumber: document.getElementById('cfg-wa-num').value,
+    whatsappMsg: document.getElementById('cfg-wa-msg').value,
+  };
+  store('config', siteConfig);
+  toast('Información general guardada ✓','success');
+}
+function saveRedes() {
+  social = {
+    ...social,
+    instagram: document.getElementById('cfg-ig').value,
+    facebook: document.getElementById('cfg-fb').value,
+    youtube: document.getElementById('cfg-yt').value,
+    linkedin: document.getElementById('cfg-li').value,
+  };
+  store('social', social);
+  toast('Redes sociales guardadas ✓','success');
+}
+function saveCredenciales() {
+  const u = document.getElementById('cfg-admin-user').value.trim();
+  const np = document.getElementById('cfg-admin-pass').value.trim();
+  if(!u){ toast('El usuario no puede estar vacío','error'); return; }
+  adminCreds = { user:u, pass: np ? np : getAdminCreds().pass };
+  store('admin_creds', adminCreds);
+  toast('Credenciales actualizadas ✓','success');
+}
+function handleLogoUpload(input, brandKey, w, h) {
+  const file = input.files[0];
+  if(!file) return;
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = e => {
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      let dataUrl;
+      try { dataUrl = canvas.toDataURL('image/webp', 0.85); }
+      catch(err) { dataUrl = canvas.toDataURL('image/png'); }
+      brand[brandKey] = dataUrl;
+      store('brand', brand);
+      renderConfigTabBody();
+      toast('Logo actualizado y optimizado ✓','success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── USER PAGES ────────────────────────────────────────────────
+function renderUserInicio(p) {
+  p.innerHTML = `
+    <div style="margin-bottom:28px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;margin-bottom:6px">Bienvenido a tu panel, <strong style="color:var(--oro)">Usuario</strong></div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5)">Aquí podés gestionar tus favoritos, citas agendadas y presupuestos recibidos.</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-card-num">${favs.length}</div><div class="stat-card-label">Favoritos guardados</div></div>
+      <div class="stat-card"><div class="stat-card-num">${citas.length}</div><div class="stat-card-label">Citas agendadas</div></div>
+      <div class="stat-card"><div class="stat-card-num">${presupuestos.length}</div><div class="stat-card-label">Presupuestos recibidos</div></div>
+      <div class="stat-card"><div class="stat-card-num">${propiedades.length}</div><div class="stat-card-label">Propiedades disponibles</div></div>
+    </div>
+    <div class="card" style="margin-top:8px">
+      <div class="card-header"><div class="card-title">Propiedades recientes</div><a href="index.html" target="_blank" class="btn-sm btn-view">Ver todo →</a></div>
+      <div style="padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px">
+        ${propiedades.slice(0,4).map(p=>`
+          <div class="user-prop-card">
+            <img class="user-prop-img" src="${p.imgs[0]}" alt="${p.titulo}">
+            <div class="user-prop-body">
+              <div class="user-prop-price">${p.precio}</div>
+              <div class="user-prop-title">${p.titulo}</div>
+              <div class="user-prop-loc">📍 ${p.zona}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderUserFavs(p) {
+  const favProps = propiedades.filter(pp=>favs.includes(pp.id));
+  p.innerHTML = `
+    <div class="user-prop-grid">
+      ${favProps.length ? favProps.map(pp=>`
+        <div class="user-prop-card">
+          <img class="user-prop-img" src="${pp.imgs[0]}" alt="">
+          <div class="user-prop-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+              <div class="user-prop-price">${pp.precio}</div>
+              <button onclick="removeFav(${pp.id})" style="background:none;border:none;color:var(--rojo);cursor:pointer;font-size:16px;padding:0">♥</button>
+            </div>
+            <div class="user-prop-title">${pp.titulo}</div>
+            <div class="user-prop-loc">📍 ${pp.zona} · ${pp.sup}</div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn-sm btn-send" onclick="goPage('u-contacto')" style="flex:1;padding:8px">Consultar →</button>
+            </div>
+          </div>
+        </div>`).join('') : '<div style="color:rgba(255,255,255,0.4);font-size:14px;padding:24px">No tenés propiedades guardadas aún.</div>'}
+    </div>
+  `;
+}
+
+function removeFav(id) {
+  favs = favs.filter(f=>f!==id); store('favs',favs);
+  goPage('u-favoritos');
+  toast('Eliminado de favoritos','success');
+}
+
+function renderUserCitas(p) {
+  p.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Mis citas agendadas</div></div>
+      <div class="card-body">
+        ${citas.length ? `<table>
+          <thead><tr><th>Tipo</th><th>Propiedad</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+          <tbody>${citas.map(c=>`
+            <tr>
+              <td>${c.tipo}</td>
+              <td style="font-size:12px;color:rgba(255,255,255,0.6)">${c.propiedad}</td>
+              <td><strong>${c.fecha}</strong></td>
+              <td>${c.hora}</td>
+              <td><span class="tag tag-${c.estado}">${c.estado}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>` : '<div style="padding:24px;color:rgba(255,255,255,0.4)">No tenés citas agendadas. <button class="btn-sm btn-edit" onclick="goPage(\'u-contacto\')">Solicitar una cita</button></div>'}
+      </div>
+    </div>
+  `;
+}
+
+function renderUserPresups(p) {
+  p.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Presupuestos recibidos</div></div>
+      <div class="card-body">
+        ${presupuestos.length ? `<table>
+          <thead><tr><th>Concepto</th><th>Total</th><th>Fecha</th><th>Acciones</th></tr></thead>
+          <tbody>${presupuestos.map(pr=>`
+            <tr>
+              <td style="font-size:12px;color:rgba(255,255,255,0.7);max-width:280px">${pr.concepto}</td>
+              <td style="color:var(--oro);font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700">${pr.total}</td>
+              <td style="font-size:12px;color:rgba(255,255,255,0.4)">${pr.fecha}</td>
+              <td><button class="btn-sm btn-view" onclick="viewPresup(${pr.id})">👁 Ver detalle</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>` : '<div style="padding:24px;color:rgba(255,255,255,0.4)">No recibiste presupuestos aún.</div>'}
+      </div>
+    </div>
+  `;
+}
+
+function renderUserContacto(p) {
+  p.innerHTML = `
+    <div style="max-width:560px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Enviar consulta al equipo Luvian</div></div>
+        <div style="padding:24px">
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre</label><input type="text" placeholder="Tu nombre"></div>
+            <div class="form-group"><label>Teléfono</label><input type="text" placeholder="+54 362..."></div>
+            <div class="form-group full"><label>Interés</label>
+              <select><option>Lotes</option><option>Viviendas</option><option>Naves Industriales</option><option>Consulta general</option></select>
+            </div>
+            <div class="form-group full"><label>Mensaje</label><textarea rows="4" placeholder="Contanos qué estás buscando..."></textarea></div>
+          </div>
+          <button class="btn-primary" style="width:100%;margin-top:16px" onclick="toast('Mensaje enviado al asesor ✓','success')">Enviar consulta →</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-header"><div class="card-title">Solicitar cita presencial</div></div>
+        <div style="padding:20px">
+          <div class="form-grid">
+            <div class="form-group"><label>Fecha preferida</label><input type="date"></div>
+            <div class="form-group"><label>Hora preferida</label><input type="time"></div>
+            <div class="form-group full"><label>Tipo de cita</label>
+              <select><option>Visita a propiedad</option><option>Consulta en oficina</option><option>Videollamada</option></select>
+            </div>
+          </div>
+          <button class="btn-primary" style="width:100%;margin-top:16px" onclick="toast('Solicitud de cita enviada ✓','success')">Solicitar cita →</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function openModal(title, content) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalContent').innerHTML = content;
+  document.getElementById('mainOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('mainOverlay').classList.remove('open'); }
+function closeOverlay(e) { if(e.target.id==='mainOverlay') closeModal(); }
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type==='success'?'✓ ':type==='error'?'⚠ ':'') + msg;
+  t.className = 'toast show ' + type;
+  setTimeout(()=>t.className='toast', 3200);
+}
+</script>
+</body>
+</html>
