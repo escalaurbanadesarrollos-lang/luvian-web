@@ -446,6 +446,20 @@ section { padding:100px 52px; transition: background 0.4s, color 0.4s; }
 .btn-fav:hover { border-color:var(--oro); color:var(--oro); background:rgba(212,175,55,0.06); }
 .btn-fav.active { color:#e74c3c; border-color:#e74c3c; }
 
+.prop-media-row { display:flex; flex-wrap:wrap; gap:8px; padding:0 24px 18px; }
+.btn-media {
+  display:inline-flex; align-items:center; gap:5px; padding:7px 13px; border-radius:50px;
+  border:1px solid rgba(212,175,55,0.35); background:rgba(212,175,55,0.06); color:#0d1b3e;
+  font-family:'Jost',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.4px;
+  text-decoration:none; cursor:pointer; transition:var(--transition);
+}
+.btn-media:hover { background:var(--oro); border-color:var(--oro); color:#080e1f; transform:translateY(-2px); }
+.modal-media-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:12px; }
+.modal-media-actions .btn-media { font-size:11.5px; padding:9px 16px; }
+.modal-extra-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(76px,1fr)); gap:8px; margin-top:10px; }
+.modal-extra-gallery img { width:100%; height:70px; object-fit:cover; border-radius:6px; cursor:pointer; border:1px solid var(--border); transition:var(--transition); }
+.modal-extra-gallery img:hover { border-color:var(--oro); transform:scale(1.04); }
+
 /* ═══════════════════════════════════════════
    NOSOTROS / LUVIAN ACRONYM
 ═══════════════════════════════════════════ */
@@ -1677,6 +1691,37 @@ function altPrice(usdVal) {
   }
   return '≈ USD ' + usdVal.toLocaleString('en-US');
 }
+// Precio principal de una propiedad: usa priceARS (valor real publicado por el
+// desarrollador, en pesos) cuando está definido; si no existe, cae al esquema
+// original en USD. Si no hay precio cargado, invita a consultar.
+function priceMain(p) {
+  if (p.priceARS) return '$ ' + p.priceARS.toLocaleString('es-AR');
+  if (p.hasOwnProperty('priceARS') && !p.priceARS) return 'Consultar valor';
+  if (p.priceUSD != null) return fmtPrice(p.priceUSD);
+  return 'Consultar valor';
+}
+function priceSec(p) {
+  if (p.priceARS) return p.priceARSNote || '';
+  if (p.hasOwnProperty('priceARS') && !p.priceARS) return p.priceARSNote || 'Consultar con nuestro equipo';
+  if (p.priceUSD != null) return altPrice(p.priceUSD);
+  return '';
+}
+// Fila de botones "Video / Recorrido 360° / Descargar ficha" — sólo se
+// renderiza si la propiedad efectivamente cuenta con ese recurso cargado.
+function renderMediaRow(p) {
+  const btns = [];
+  (p.videos || []).forEach(v => {
+    btns.push(`<a class="btn-media" href="${v.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🎬 ${v.label || 'Video'}</a>`);
+  });
+  if (p.tour360) {
+    btns.push(`<a class="btn-media" href="${p.tour360}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🧭 Recorrido 360°</a>`);
+  }
+  if (p.ficha) {
+    btns.push(`<a class="btn-media" href="${p.ficha}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 Descargar ficha</a>`);
+  }
+  if (!btns.length) return '';
+  return `<div class="prop-media-row" onclick="event.stopPropagation()">${btns.join('')}</div>`;
+}
 function updateOfertaPrices() {
   document.querySelectorAll('.oferta-mini-price[data-usd]').forEach(el => { el.textContent = fmtPrice(+el.dataset.usd); });
   document.querySelectorAll('.oferta-mini-old[data-usd]').forEach(el => { el.textContent = fmtPrice(+el.dataset.usd); });
@@ -1690,25 +1735,58 @@ if(currentCurrency === 'ARS') {
 // DATA
 // ══════════════════════════════════════════════
 const props = [
-  { id:1, tipo:'lote', badge:'badge-lote', label:'LOTE',
-    title:'Lote Residencial — Barrio Don Bosco', oferta:true,
-    priceUSD:18500, zona:'Resistencia Norte', sup:'450 m²',
-    desc:'Lote residencial en barrio consolidado con todas las habilitaciones. Cercano a escuelas, comercios y accesos principales. Documentación en orden, entrega inmediata.',
-    features:['🌳 Arbolado','💧 Agua potable','⚡ Luz'],
-    imgs:['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=700&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80','https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80'],
-    lat:-27.45, lng:-58.98,
-    reviews:[{stars:5,text:'Excelente atención y muy buena ubicación. El proceso fue rápido y transparente.',autor:'Martín R., 2024'},{stars:4,text:'Muy conforme con el lote y la gestión de Luvian. Recomiendo totalmente.',autor:'Sofía G., 2024'}]
+  { id:1, tipo:'lote', badge:'badge-lote', label:'LOTE', estadoLabel:'PREVENTA',
+    title:'Makallé Housing — Lotes en Preventa', oferta:false,
+    priceARS:8550000, priceARSNote:'Anticipo $1.445.000 · financiación en 12, 24 o 36 cuotas ajustadas por IPC',
+    zona:'Makallé, Chaco', sup:'Lotes desde 200 m²',
+    desc:'Primera etapa de preventa de lotes residenciales de 200 m² en Makallé. El proyecto —impulsado por Escala Urbana— contempla la construcción de viviendas modernas mediante sistema Wood Frame, con obras listas en aproximadamente 90 días, alta eficiencia energética y posibilidad de ampliaciones futuras. Excelente conectividad por autovía y fuerte potencial de valorización.',
+    features:['🏗️ Sistema Wood Frame','💧 Agua en desarrollo','⚡ Electricidad en desarrollo'],
+    imgs:['/assets/imagenes/loteos/makalle-housing/portada.webp','/assets/imagenes/loteos/makalle-housing/aerea-01.webp','/assets/imagenes/loteos/makalle-housing/aerea-02.webp','/assets/imagenes/loteos/makalle-housing/render-01.webp','/assets/imagenes/loteos/makalle-housing/render-02-perspectiva.webp','/assets/imagenes/loteos/makalle-housing/tipologia-01.webp','/assets/imagenes/loteos/makalle-housing/tipologia-02.webp','/assets/imagenes/loteos/makalle-housing/tipologia-03.webp'],
+    lat:-27.207427461485917, lng:-59.2812031450229,
+    videos:[{label:'Video del loteo', url:'/assets/videos/loteos/makalle-housing/video-01.mp4'},{label:'Video 2', url:'/assets/videos/loteos/makalle-housing/video-02.mp4'}],
+    tour360:'https://kuula.co/share/collection/7T55X?logo=1&info=1&fs=1&vr=0&sd=1&thumbs=1',
+    ficha:null,
+    reviews:[]
   },
   { id:2, tipo:'lote', badge:'badge-lote', label:'LOTE',
-    title:'Lote Comercial — Av. Alberdi', oferta:false,
-    priceUSD:32000, zona:'Resistencia Centro', sup:'600 m²',
-    desc:'Lote en esquina de alto tránsito sobre arteria principal. Ideal para local comercial, edificio de departamentos u oficinas. Habilitaciones municipales al día.',
-    features:['🚦 Esquina','🚌 Acceso directo','📶 Fibra óptica'],
-    imgs:['https://images.unsplash.com/photo-1586880244406-556ebe35f282?w=700&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80','https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=400&q=80'],
-    lat:-27.45, lng:-58.99,
-    reviews:[{stars:5,text:'Ubicación ideal para comercio. Ya empezamos la obra y todo excelente.',autor:'Diego M., 2024'}]
+    title:'Lotes Industriales Ruta 16 — Puerto Tirol', oferta:false,
+    priceARS:40427100, priceARSNote:'5 lotes disponibles, de $40.427.100 a $58.394.700 (aprox. USD 27.000 a USD 39.000, dólar MEP)',
+    zona:'Puerto Tirol, Chaco — Colectora Ruta Nacional N°16, Km 24', sup:'De 979 m² a 1.153 m²',
+    desc:'Desarrollo de cinco lotes industriales sobre la colectora de la Ruta Nacional N°16, Km 24, en Puerto Tirol. Su cercanía al Parque Industrial de Tirol y a empresas como Santiano, Nexo y el depósito de Mercado Libre lo convierte en una excelente opción para galpones, depósitos, logística y pequeñas industrias, con posibilidad de adquirir superficies mayores por hectárea.',
+    features:['🚛 Acceso para tránsito pesado','⚡ Energía eléctrica','🛣️ Frente a Ruta Nacional N°16'],
+    imgs:['/assets/imagenes/loteos/industrial-tirol/masterplan.webp','/assets/imagenes/loteos/industrial-tirol/foto-01.webp','/assets/imagenes/loteos/industrial-tirol/foto-02.webp','/assets/imagenes/loteos/industrial-tirol/foto-03.webp'],
+    lat:-27.37442201903443, lng:-59.04874645530934,
+    videos:[{label:'Video del predio', url:'/assets/videos/loteos/industrial-tirol/video-01.mp4'}],
+    tour360:null,
+    ficha:null,
+    reviews:[]
   },
-  { id:3, tipo:'vivienda', badge:'badge-vivienda', label:'VIVIENDA',
+  { id:3, tipo:'lote', badge:'badge-lote', label:'LOTE', estadoLabel:'PREVENTA',
+    title:'Barrio Privado Manantiales — Colonia Benítez', oferta:false,
+    priceARS:15000000, priceARSNote:'Precio futuro $23.000.000 · Ahorrás $8.000.000 en preventa · anticipo $6.000.000 · hasta 36 cuotas en pesos',
+    zona:'Frente a Colonia Benítez, Chaco', sup:'8 lotes exclusivos de 600 m²',
+    desc:'Barrio privado ubicado frente a Colonia Benítez, pensado para quienes buscan naturaleza, tranquilidad y proyección de valor. Cuenta con solo 8 lotes exclusivos de 600 m² en etapa de preventa, con calles internas, espacios verdes y portal de acceso en desarrollo, a minutos del Área Metropolitana de Resistencia.',
+    features:['🌳 Entorno natural','🔐 Barrio privado','📐 Solo 8 lotes exclusivos'],
+    imgs:['/assets/imagenes/loteos/manantiales/flyer-01.webp','/assets/imagenes/loteos/manantiales/foto-01.webp','/assets/imagenes/loteos/manantiales/foto-02.webp','/assets/imagenes/loteos/manantiales/foto-03.webp','/assets/imagenes/loteos/manantiales/flyer-02.webp'],
+    lat:-27.31276705216062, lng:-58.99982597699013,
+    videos:[{label:'Video 1', url:'/assets/videos/loteos/manantiales/video-01.mp4'},{label:'Video 2', url:'/assets/videos/loteos/manantiales/video-02.mp4'}],
+    tour360:null,
+    ficha:null,
+    reviews:[]
+  },
+  { id:4, tipo:'lote', badge:'badge-lote', label:'LOTE',
+    title:'Florentina 2', oferta:false,
+    priceARS:null, priceARSNote:'Consultá precios, medidas y financiación disponible',
+    zona:'Chaco — ubicación a confirmar con nuestro equipo', sup:'Consultar disponibilidad de m²',
+    desc:'Nuevo loteo Florentina 2, con relevamiento aéreo y plano de subdivisión ya disponibles. Nuestro equipo comercial puede brindarte disponibilidad actualizada, medidas exactas de cada lote, precios y planes de financiación.',
+    features:['📸 Relevamiento aéreo disponible','🗺️ Plano de subdivisión disponible'],
+    imgs:['/assets/imagenes/loteos/florentina-2/aerea-01.webp','/assets/imagenes/loteos/florentina-2/plano-01.webp','/assets/imagenes/loteos/florentina-2/plano-02.webp'],
+    videos:[],
+    tour360:null,
+    ficha:null,
+    reviews:[]
+  },
+  { id:5, tipo:'vivienda', badge:'badge-vivienda', label:'VIVIENDA',
     title:'Casa Moderna — Barranqueras', oferta:true,
     priceUSD:65000, zona:'Barranqueras', sup:'120 m² cubiertos',
     desc:'Casa moderna de 3 ambientes con jardín. Cocina integrada, baño completo con vanitory, piso porcelanato. Barrio tranquilo, a 5 min del centro. Lista para entrar.',
@@ -1717,7 +1795,7 @@ const props = [
     lat:-27.47, lng:-58.94,
     reviews:[{stars:5,text:'Hermosa propiedad. La familia Luvian siempre disponible para ayudar.',autor:'Ana P., 2023'},{stars:5,text:'Calidad de construcción impecable. Muy satisfecha con la compra.',autor:'Lorena F., 2024'}]
   },
-  { id:4, tipo:'vivienda', badge:'badge-vivienda', label:'VIVIENDA',
+  { id:6, tipo:'vivienda', badge:'badge-vivienda', label:'VIVIENDA',
     title:'Duplex Premium — Fontana', oferta:false,
     priceUSD:85000, zona:'Fontana', sup:'180 m² cubiertos',
     desc:'Duplex de categoría con piscina privada. Planta baja social completa, planta alta con 3 dormitorios en suite. Terminaciones premium y jardín diseñado.',
@@ -1726,7 +1804,7 @@ const props = [
     lat:-27.43, lng:-58.97,
     reviews:[{stars:5,text:'Súper conforme. La piscina es espectacular y el duplex está muy bien terminado.',autor:'Roberto S., 2024'}]
   },
-  { id:5, tipo:'nave', badge:'badge-nave', label:'NAVE INDUSTRIAL',
+  { id:7, tipo:'nave', badge:'badge-nave', label:'NAVE INDUSTRIAL',
     title:'Nave Logística — Parque Industrial', oferta:false,
     priceUSD:185000, zona:'Parque Industrial Resistencia', sup:'1.200 m² cubiertos',
     desc:'Nave industrial de planta libre con altura libre de 9 metros. Portón para camiones, oficinas integradas, 3 fases eléctricas y conexión a gas natural.',
@@ -1734,34 +1812,6 @@ const props = [
     imgs:['https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=700&q=80','https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=400&q=80','https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80'],
     lat:-27.40, lng:-59.00,
     reviews:[{stars:4,text:'Infraestructura de primer nivel. Muy buena inversión para la industria chaqueña.',autor:'Empresa MetalChaco, 2023'}]
-  },
-  { id:6, tipo:'lote', badge:'badge-lote', label:'LOTE',
-    title:'Lotes en Barrio Cerrado — Las Palmeras', oferta:false,
-    priceUSD:25000, zona:'Resistencia Sudoeste', sup:'360 m²',
-    desc:'Loteos en barrio privado con seguridad 24hs, parques comunes, club house y piscina comunitaria. Financiación en cuotas. Últimas unidades disponibles.',
-    features:['🔐 Barrio privado','🌴 Parques','🏊 Piscina'],
-    imgs:['https://images.unsplash.com/photo-1531971589569-0d9370cbe1e5?w=700&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80','https://images.unsplash.com/photo-1565402170291-8491f1b7f45a?w=400&q=80'],
-    lat:-27.48, lng:-59.01,
-    reviews:[{stars:5,text:'El barrio es precioso. Compramos hace 6 meses y ya empezamos a construir.',autor:'Familia Sánchez, 2024'},{stars:4,text:'Excelente relación precio-calidad. La financiación fue clave para nosotros.',autor:'Pablo T., 2024'}]
-  },
-  { id:7, tipo:'lote', badge:'badge-lote', label:'LOTE', oportunidad:true,
-    title:'Camping Empleados de Comercio', oferta:true,
-    priceUSD:11673, priceARSListado:'$22.000.000', priceARSOportunidad:'$15.000.000', zona:'Makallé', sup:'15 x 30 m',
-    frente:15, fondo:30,
-    desc:'Terreno de 15 x 30 m ideal para inversión u organización de eventos. Precio lista $22.000.000, precio oportunidad $15.000.000, con financiación propia y 60% de entrega.',
-    features:['📐 15 x 30 m','💳 60% de entrega','🔥 Precio oportunidad'],
-    imgs:['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=700&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80','https://images.unsplash.com/photo-1565402170291-8491f1b7f45a?w=400&q=80'],
-    lat:-27.24, lng:-59.25,
-    reviews:[]
-  },
-  { id:8, tipo:'lote', badge:'badge-lote', label:'LOTE', oportunidad:true,
-    title:'Lote Insuga', oferta:true,
-    priceUSD:22000, priceUSDOld:40000, zona:'Chaco', sup:'618 m²',
-    desc:'Lote de 618 m² a precio de oportunidad, con financiación propia y 60% de entrega.',
-    features:['📐 618 m²','💳 60% de entrega','🔥 Precio oportunidad'],
-    imgs:['https://images.unsplash.com/photo-1586880244406-556ebe35f282?w=700&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80','https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=400&q=80'],
-    lat:-27.45, lng:-59.05,
-    reviews:[]
   },
 ];
 
@@ -1814,11 +1864,11 @@ function renderProps(tipo) {
         <img class="prop-img" src="${p.imgs[0]}" alt="${p.title}" loading="lazy">
         <div class="prop-img-overlay"></div>
         <span class="prop-badge ${p.badge}">${p.label}</span>
-        ${p.oferta ? '<span class="badge-oferta">OFERTA</span>' : ''}
+        ${p.estadoLabel ? `<span class="badge-oferta">${p.estadoLabel}</span>` : (p.oferta ? '<span class="badge-oferta">OFERTA</span>' : '')}
       </div>
       <div class="prop-body">
-        <div class="prop-price">${fmtPrice(p.priceUSD)}</div>
-        <div class="prop-price-sec">${altPrice(p.priceUSD)}</div>
+        <div class="prop-price">${priceMain(p)}</div>
+        <div class="prop-price-sec">${priceSec(p)}</div>
         <div class="prop-title">${p.title}</div>
         <div class="prop-loc">📍 ${p.zona}</div>
         <div class="prop-features">
@@ -1827,10 +1877,11 @@ function renderProps(tipo) {
         </div>
       </div>
       <div class="prop-footer">
-        <button class="btn-ver" onclick="event.stopPropagation();openPropModal(props[${p.id-1}])">Ver detalle</button>
+        <button class="btn-ver" onclick="event.stopPropagation();openPropModal(props[${p.id-1}])">Ver Proyecto</button>
         <button class="btn-fav ${favs.has(p.id)?'active':''}" title="Favorito" onclick="event.stopPropagation();toggleFav(this,${p.id})">${favs.has(p.id)?'♥':'♡'}</button>
         <button class="btn-fav" title="Compartir" onclick="event.stopPropagation();shareProp(props[${p.id-1}],'whatsapp')">↗</button>
       </div>
+      ${renderMediaRow(p)}
     </div>
   `).join('');
 
@@ -1891,15 +1942,18 @@ function renderLanzamientos() {
 // ══════════════════════════════════════════════
 function openPropModal(p) {
   const stars = n => '★'.repeat(n)+'☆'.repeat(5-n);
+  const extraImgs = (p.imgs || []).slice(3);
+  const mediaBtns = renderMediaRow(p).replace('prop-media-row','prop-media-row modal-media-actions');
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-gallery">
-      <img class="main-img" src="${p.imgs[0]}" alt="">
-      <div class="side-imgs"><img src="${p.imgs[1]}" alt=""><img src="${p.imgs[2]}" alt=""></div>
+      <img class="main-img" id="modalMainImg" src="${p.imgs[0]}" alt="">
+      <div class="side-imgs"><img src="${p.imgs[1]||p.imgs[0]}" alt="" onclick="document.getElementById('modalMainImg').src=this.src"><img src="${p.imgs[2]||p.imgs[0]}" alt="" onclick="document.getElementById('modalMainImg').src=this.src"></div>
     </div>
+    ${extraImgs.length ? `<div class="modal-extra-gallery">${extraImgs.map(src=>`<img src="${src}" alt="" onclick="document.getElementById('modalMainImg').src='${src}'">`).join('')}</div>` : ''}
     <div class="modal-info-grid">
       <div class="modal-left">
-        <div class="modal-price-big">${fmtPrice(p.priceUSD)}</div>
-        <div class="modal-price-sec">${altPrice(p.priceUSD)}</div>
+        <div class="modal-price-big">${priceMain(p)}</div>
+        <div class="modal-price-sec">${priceSec(p)}</div>
         <div class="modal-prop-title">${p.title}</div>
         <div class="modal-location">📍 ${p.zona} &nbsp;·&nbsp; 📐 ${p.sup}</div>
         <div class="modal-desc">${p.desc}</div>
@@ -1908,6 +1962,7 @@ function openPropModal(p) {
           <div class="spec-item"><div class="spec-label">Superficie</div><div class="spec-val">${p.sup}</div></div>
         </div>
         <a href="${getWaLink('Hola Luvian, me interesa ' + p.title)}" target="_blank" class="btn-whatsapp">💬 Consultar por WhatsApp</a>
+        ${mediaBtns}
         <div class="share-row">
           <div class="share-btn" title="Compartir por WhatsApp" onclick="shareProp(props[${p.id-1}],'whatsapp')">💬</div>
           <div class="share-btn" title="Compartir en Facebook" onclick="shareProp(props[${p.id-1}],'facebook')">📘</div>
@@ -1915,13 +1970,13 @@ function openPropModal(p) {
         </div>
       </div>
       <div>
-        <div class="modal-map">
+        ${(p.lat && p.lng) ? `<div class="modal-map">
           <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3543.5!2d${p.lng}!3d${p.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94450c3b%3A0x8c6a!2sResistencia!5e0!3m2!1ses!2sar!4v1" allowfullscreen loading="lazy"></iframe>
-        </div>
-        <div class="reviews-section">
+        </div>` : ''}
+        ${(p.reviews && p.reviews.length) ? `<div class="reviews-section">
           <div class="reviews-title">Reseñas de clientes</div>
           ${p.reviews.map(r=>`<div class="review"><div class="review-stars">${stars(r.stars)}</div><div class="review-text">${r.text}</div><div class="review-author">— ${r.autor}</div></div>`).join('')}
-        </div>
+        </div>` : ''}
       </div>
     </div>`;
   document.getElementById('propModal').classList.add('open');
@@ -2132,7 +2187,7 @@ function renderSocialIcons() {
 // ══════════════════════════════════════════════
 function shareProp(p, via) {
   const url = window.location.href.split('#')[0] + '#prop-' + p.id;
-  const text = `${p.title} — ${fmtPrice(p.priceUSD)} · Luvian Desarrollos`;
+  const text = `${p.title} — ${priceMain(p)} · Luvian Desarrollos`;
   if(via === 'whatsapp') {
     window.open(getWaLink(text + ' ' + url), '_blank');
   } else if(via === 'facebook') {
